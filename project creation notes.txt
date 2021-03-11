@@ -1,0 +1,49 @@
+SERVER SERVER SERVER SERVER
+npm init -y
+
+yarn add -D @types/node typescript
+
+yarn add -D ts-node
+
+copy over tsconfig.json from some other project
+
+npx tsconfig.json (select node)
+
+yarn add -D nodemon
+
+yarn add typeorm
+
+yarn add express express-session
+
+yarn add -D @types/express
+
+yarn add connect-redis
+
+yarn add -D @types/connect-redis
+
+yarn add ioredis
+
+yarn add cors
+
+yarn add -D @types/cors
+
+npx gen-env-types .env -o src/env.d.ts -e .
+
+yarn add apollo-server-express
+
+yarn add type-graphql
+
+yarn add graphql
+
+yarn add class-validator
+
+yarn add dotenv-safe
+
+yarn add pg
+
+createdb -U postgres kchat-dev
+
+- make sure to paste in the other imports that aren't installed with yarn in the index.ts
+
+- change database url in .env file
+
