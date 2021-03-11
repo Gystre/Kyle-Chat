@@ -41,7 +41,11 @@ yarn add dotenv-safe
 
 yarn add pg
 
+yarn add argon2
+
 createdb -U postgres kchat-dev
+
+- copy over ormconfig.json so that u can run migrations
 
 - make sure to paste in the other imports that aren't installed with yarn in the index.ts
 

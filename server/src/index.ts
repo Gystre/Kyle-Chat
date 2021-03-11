@@ -11,6 +11,8 @@ import cors from "cors";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import { HelloResolver } from "./resolvers/hello";
+import { User } from "./entities/User";
+import { UserResolver } from "./resolvers/user";
 
 const main = async () => {
     //create db connection
@@ -20,7 +22,7 @@ const main = async () => {
         logging: true,
         // synchronize: true, //create the tables automatically without running a migration (good for development)
         migrations: [path.join(__dirname, "./migrations/*")],
-        entities: [], //ENTITIES GO HERE
+        entities: [User], //MAKE SURE TO ADD ANY NEW ENTITIES HERE
     });
     //run the migrations inside the migrations folder
     // await connection.runMigrations();
@@ -71,7 +73,7 @@ const main = async () => {
 
     const apolloServer = new ApolloServer({
         schema: await buildSchema({
-            resolvers: [HelloResolver],
+            resolvers: [HelloResolver, UserResolver],
             validate: false,
         }),
         context: ({ req, res }) => ({
