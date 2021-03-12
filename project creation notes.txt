@@ -51,3 +51,34 @@ createdb -U postgres kchat-dev
 
 - change database url in .env file
 
+CLIENT CLIENT CLIENT CLIENT CLIENT
+yarn create next-app --example with-chakra-ui web
+
+- delete everything in index.js and change file extension to .tsx
+
+- delete all components
+
+yarn add -D typescript @types/node
+
+yarn add typeorm
+
+yarn add @apollo/client
+
+yarn add @chakra-ui/core
+
+yarn add @emotion/core
+
+yarn add emotion-theming
+
+yarn add formik
+
+yarn add -D @graphql-codegen/cli
+
+yarn graphql-codegen init
+- built with react
+- schema = https://localhost:4000/graphql
+- operations and fragments: src/graphql/**/*.graphql
+- introspection: No
+- script to run: gen
+
+yarn gen
