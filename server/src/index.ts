@@ -13,6 +13,7 @@ import { buildSchema } from "type-graphql";
 import { HelloResolver } from "./resolvers/hello";
 import { User } from "./entities/User";
 import { UserResolver } from "./resolvers/user";
+import { Friend } from "./entities/Friend";
 
 const main = async () => {
     //create db connection
@@ -22,7 +23,7 @@ const main = async () => {
         logging: true,
         // synchronize: true, //create the tables automatically without running a migration (good for development)
         migrations: [path.join(__dirname, "./migrations/*")],
-        entities: [User], //MAKE SURE TO ADD ANY NEW ENTITIES HERE
+        entities: [User, Friend], //MAKE SURE TO ADD ANY NEW ENTITIES HERE
     });
     //run the migrations inside the migrations folder
     // await connection.runMigrations();

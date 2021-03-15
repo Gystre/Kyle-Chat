@@ -6,7 +6,9 @@ import {
     UpdateDateColumn,
     Column,
     PrimaryGeneratedColumn,
+    OneToMany,
 } from "typeorm";
+import { Friend } from "./Friend";
 
 @ObjectType()
 @Entity()
@@ -35,5 +37,6 @@ export class User extends BaseEntity {
     @UpdateDateColumn()
     updatedAt = new Date();
 
-    //need to add OneToMany relationship for friends
+    @OneToMany(() => Friend, (friend) => friend.requester)
+    friends: Friend[];
 }
