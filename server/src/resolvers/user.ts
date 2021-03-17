@@ -10,6 +10,7 @@ import {
     Query,
     Arg,
     Mutation,
+    Int,
 } from "type-graphql";
 import { getConnection } from "typeorm";
 import { UsernamePasswordInput } from "./classes/UsernamePasswordInput";
@@ -40,6 +41,11 @@ export class UserResolver {
             return null;
         }
         return User.findOne(req.session.userId);
+    }
+
+    @Query(() => User, { nullable: true })
+    findById(@Arg("id", () => Int) id: number) {
+        return User.findOne(id);
     }
 
     @Mutation(() => UserResponse)

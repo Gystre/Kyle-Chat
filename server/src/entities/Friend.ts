@@ -9,15 +9,10 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 import { User } from "./User";
-
-enum RequestState {
-    Pending = 0,
-    Accepted,
-    Declined,
-}
+import { FriendRequestState } from "@kyle-chat/common";
 
 /*
-This table will contain all the user's friends and their state can be determined through the enum
+This table will contain all the user's friends and their state can be determined through the enum.
 */
 
 @ObjectType()
@@ -27,24 +22,24 @@ export class Friend extends BaseEntity {
     @PrimaryGeneratedColumn()
     id!: number;
 
+    //keep track of who sent the request via id
     @Field()
     @Column({ type: "int" })
     requesterId!: number;
 
-    //needs to keep track of who sent the request
+    //need the id of the requestee so we can query it to check stuff
+    @Field()
+    @Column({ type: "int" })
+    requesteeId!: number;
+
+    //the user we sent the request to
     @ManyToOne(() => User, (user) => user.friends)
-    requester: User;
+    requestee!: User;
 
     //the state in enum (pending, accepted, declined)
     @Field()
-    @Column({ type: "int", default: RequestState.Pending })
-    state!: RequestState;
-
-    //the id of the user we're trying to add
-    //need to look more into how to have a whole type so can have nested queries instead of having to do a whois kind of query on the id
-    @Field()
-    @Column({ type: "int" })
-    requesteeId: number;
+    @Column({ type: "int", default: FriendRequestState.Pending })
+    state: FriendRequestState;
 
     @Field(() => String)
     @CreateDateColumn()

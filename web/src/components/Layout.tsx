@@ -15,15 +15,14 @@ two column layout we have
 interface Props {}
 export const Layout: React.FC<Props> = ({ children }) => {
     const { colorMode } = useColorMode();
-    const bgColor = { light: "gray.50", dark: "gray.900" };
-
+    const bgColor = { light: "gray.200", dark: "gray.800" };
     const color = { light: "black", dark: "white" };
 
     return (
-        <Box bg={bgColor[colorMode]} color={color[colorMode]}>
+        <>
             <Navbar />
             <Grid templateColumns="200px 1fr">
-                <Box h="100vh" bg="gray.200">
+                <Box h="100vh" bg={bgColor[colorMode]} color={color[colorMode]}>
                     <NextLink href="/friends">
                         <Link cursor="pointer">
                             <Box
@@ -53,12 +52,12 @@ export const Layout: React.FC<Props> = ({ children }) => {
                         </Link>
                     </NextLink>
                     <Box fontSize="small" mt="5" ml="6">
-                        <b>DIRECT MESSAGES</b>
+                        <b style={{ letterSpacing: "1px" }}>DIRECT MESSAGES</b>
                         {/* below here will be a list of users that are fetched when the page is loaded */}
                     </Box>
                 </Box>
                 <Box>{children}</Box>
             </Grid>
-        </Box>
+        </>
     );
 };

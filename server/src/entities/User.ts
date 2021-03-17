@@ -37,6 +37,6 @@ export class User extends BaseEntity {
     @UpdateDateColumn()
     updatedAt = new Date();
 
-    @OneToMany(() => Friend, (friend) => friend.requester)
+    @OneToMany(() => Friend, (friend) => friend.requestee)
     friends: Friend[];
 }

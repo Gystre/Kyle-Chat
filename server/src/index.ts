@@ -14,6 +14,7 @@ import { HelloResolver } from "./resolvers/hello";
 import { User } from "./entities/User";
 import { UserResolver } from "./resolvers/user";
 import { Friend } from "./entities/Friend";
+import { FriendResolver } from "./resolvers/friend";
 
 const main = async () => {
     //create db connection
@@ -74,7 +75,7 @@ const main = async () => {
 
     const apolloServer = new ApolloServer({
         schema: await buildSchema({
-            resolvers: [HelloResolver, UserResolver],
+            resolvers: [HelloResolver, UserResolver, FriendResolver],
             validate: false,
         }),
         context: ({ req, res }) => ({
