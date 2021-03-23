@@ -8,6 +8,7 @@
         "gen": "graphql-codegen --config codegen.yml"
     },
     "dependencies": {
+        "@kyle-chat/common": "1.0.0",
         "@apollo/client": "^3.3.11",
         "@chakra-ui/core": "^1.0.0-next.7",
         "@chakra-ui/icons": "^1.0.0",

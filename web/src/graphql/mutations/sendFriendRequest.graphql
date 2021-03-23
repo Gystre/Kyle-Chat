@@ -1,0 +1,14 @@
+mutation SendFriendRequest($requesteeId: Int!){
+    sendFriendRequest(requesteeId:$requesteeId){
+        friend{
+            id
+            requesterId
+            requesteeId
+            state
+        }
+        errors{
+            field
+            message
+        }
+    }
+}

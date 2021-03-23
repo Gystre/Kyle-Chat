@@ -1,0 +1,11 @@
+query GetFriends {
+    getFriends {
+        id
+        requesterId
+        requesteeId
+
+        friendUser {
+            ...RegularUser
+        }
+    }
+}

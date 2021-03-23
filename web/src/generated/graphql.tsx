@@ -18,6 +18,15 @@ export type Query = {
   __typename?: 'Query';
   hello: Scalars['String'];
   me?: Maybe<User>;
+  findById?: Maybe<User>;
+  getOutgoingFriendRequests: Array<Friend>;
+  getIncomingFriendRequests: Array<Friend>;
+  getFriends: Array<Friend>;
+};
+
+
+export type QueryFindByIdArgs = {
+  id: Scalars['Int'];
 };
 
 export type User = {
@@ -30,11 +39,24 @@ export type User = {
   updatedAt: Scalars['String'];
 };
 
+export type Friend = {
+  __typename?: 'Friend';
+  id: Scalars['Float'];
+  requesterId: Scalars['Float'];
+  requesteeId: Scalars['Float'];
+  state: Scalars['Float'];
+  createdAt: Scalars['String'];
+  updatedAt: Scalars['String'];
+  friendUser: User;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   register: UserResponse;
   login: UserResponse;
   logout: Scalars['Boolean'];
+  sendFriendRequest: FriendResponse;
+  setFriendRequestState: Scalars['Boolean'];
 };
 
 
@@ -46,6 +68,17 @@ export type MutationRegisterArgs = {
 export type MutationLoginArgs = {
   password: Scalars['String'];
   usernameOrEmail: Scalars['String'];
+};
+
+
+export type MutationSendFriendRequestArgs = {
+  requesteeId: Scalars['Int'];
+};
+
+
+export type MutationSetFriendRequestStateArgs = {
+  newState: Scalars['Int'];
+  id: Scalars['Int'];
 };
 
 export type UserResponse = {
@@ -64,6 +97,12 @@ export type UsernamePasswordInput = {
   email: Scalars['String'];
   username: Scalars['String'];
   password: Scalars['String'];
+};
+
+export type FriendResponse = {
+  __typename?: 'FriendResponse';
+  errors?: Maybe<Array<FieldError>>;
+  friend?: Maybe<Friend>;
 };
 
 export type RegularErrorFragment = (
@@ -120,6 +159,81 @@ export type RegisterMutation = (
     { __typename?: 'UserResponse' }
     & RegularUserResponseFragment
   ) }
+);
+
+export type SendFriendRequestMutationVariables = Exact<{
+  requesteeId: Scalars['Int'];
+}>;
+
+
+export type SendFriendRequestMutation = (
+  { __typename?: 'Mutation' }
+  & { sendFriendRequest: (
+    { __typename?: 'FriendResponse' }
+    & { friend?: Maybe<(
+      { __typename?: 'Friend' }
+      & Pick<Friend, 'id' | 'requesterId' | 'requesteeId' | 'state'>
+    )>, errors?: Maybe<Array<(
+      { __typename?: 'FieldError' }
+      & Pick<FieldError, 'field' | 'message'>
+    )>> }
+  ) }
+);
+
+export type SetFriendRequestStateMutationVariables = Exact<{
+  id: Scalars['Int'];
+  newState: Scalars['Int'];
+}>;
+
+
+export type SetFriendRequestStateMutation = (
+  { __typename?: 'Mutation' }
+  & Pick<Mutation, 'setFriendRequestState'>
+);
+
+export type GetFriendsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetFriendsQuery = (
+  { __typename?: 'Query' }
+  & { getFriends: Array<(
+    { __typename?: 'Friend' }
+    & Pick<Friend, 'id' | 'requesterId' | 'requesteeId'>
+    & { friendUser: (
+      { __typename?: 'User' }
+      & RegularUserFragment
+    ) }
+  )> }
+);
+
+export type GetIncomingFriendRequestsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetIncomingFriendRequestsQuery = (
+  { __typename?: 'Query' }
+  & { getIncomingFriendRequests: Array<(
+    { __typename?: 'Friend' }
+    & Pick<Friend, 'id' | 'requesterId' | 'requesteeId' | 'state'>
+    & { friendUser: (
+      { __typename?: 'User' }
+      & RegularUserFragment
+    ) }
+  )> }
+);
+
+export type GetOutgoingFriendRequestsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetOutgoingFriendRequestsQuery = (
+  { __typename?: 'Query' }
+  & { getOutgoingFriendRequests: Array<(
+    { __typename?: 'Friend' }
+    & Pick<Friend, 'id' | 'requesterId' | 'requesteeId' | 'state'>
+    & { friendUser: (
+      { __typename?: 'User' }
+      & RegularUserFragment
+    ) }
+  )> }
 );
 
 export type MeQueryVariables = Exact<{ [key: string]: never; }>;
@@ -253,6 +367,199 @@ export function useRegisterMutation(baseOptions?: Apollo.MutationHookOptions<Reg
 export type RegisterMutationHookResult = ReturnType<typeof useRegisterMutation>;
 export type RegisterMutationResult = Apollo.MutationResult<RegisterMutation>;
 export type RegisterMutationOptions = Apollo.BaseMutationOptions<RegisterMutation, RegisterMutationVariables>;
+export const SendFriendRequestDocument = gql`
+    mutation SendFriendRequest($requesteeId: Int!) {
+  sendFriendRequest(requesteeId: $requesteeId) {
+    friend {
+      id
+      requesterId
+      requesteeId
+      state
+    }
+    errors {
+      field
+      message
+    }
+  }
+}
+    `;
+export type SendFriendRequestMutationFn = Apollo.MutationFunction<SendFriendRequestMutation, SendFriendRequestMutationVariables>;
+
+/**
+ * __useSendFriendRequestMutation__
+ *
+ * To run a mutation, you first call `useSendFriendRequestMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSendFriendRequestMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [sendFriendRequestMutation, { data, loading, error }] = useSendFriendRequestMutation({
+ *   variables: {
+ *      requesteeId: // value for 'requesteeId'
+ *   },
+ * });
+ */
+export function useSendFriendRequestMutation(baseOptions?: Apollo.MutationHookOptions<SendFriendRequestMutation, SendFriendRequestMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<SendFriendRequestMutation, SendFriendRequestMutationVariables>(SendFriendRequestDocument, options);
+      }
+export type SendFriendRequestMutationHookResult = ReturnType<typeof useSendFriendRequestMutation>;
+export type SendFriendRequestMutationResult = Apollo.MutationResult<SendFriendRequestMutation>;
+export type SendFriendRequestMutationOptions = Apollo.BaseMutationOptions<SendFriendRequestMutation, SendFriendRequestMutationVariables>;
+export const SetFriendRequestStateDocument = gql`
+    mutation SetFriendRequestState($id: Int!, $newState: Int!) {
+  setFriendRequestState(id: $id, newState: $newState)
+}
+    `;
+export type SetFriendRequestStateMutationFn = Apollo.MutationFunction<SetFriendRequestStateMutation, SetFriendRequestStateMutationVariables>;
+
+/**
+ * __useSetFriendRequestStateMutation__
+ *
+ * To run a mutation, you first call `useSetFriendRequestStateMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSetFriendRequestStateMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [setFriendRequestStateMutation, { data, loading, error }] = useSetFriendRequestStateMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      newState: // value for 'newState'
+ *   },
+ * });
+ */
+export function useSetFriendRequestStateMutation(baseOptions?: Apollo.MutationHookOptions<SetFriendRequestStateMutation, SetFriendRequestStateMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<SetFriendRequestStateMutation, SetFriendRequestStateMutationVariables>(SetFriendRequestStateDocument, options);
+      }
+export type SetFriendRequestStateMutationHookResult = ReturnType<typeof useSetFriendRequestStateMutation>;
+export type SetFriendRequestStateMutationResult = Apollo.MutationResult<SetFriendRequestStateMutation>;
+export type SetFriendRequestStateMutationOptions = Apollo.BaseMutationOptions<SetFriendRequestStateMutation, SetFriendRequestStateMutationVariables>;
+export const GetFriendsDocument = gql`
+    query GetFriends {
+  getFriends {
+    id
+    requesterId
+    requesteeId
+    friendUser {
+      ...RegularUser
+    }
+  }
+}
+    ${RegularUserFragmentDoc}`;
+
+/**
+ * __useGetFriendsQuery__
+ *
+ * To run a query within a React component, call `useGetFriendsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetFriendsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetFriendsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetFriendsQuery(baseOptions?: Apollo.QueryHookOptions<GetFriendsQuery, GetFriendsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetFriendsQuery, GetFriendsQueryVariables>(GetFriendsDocument, options);
+      }
+export function useGetFriendsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetFriendsQuery, GetFriendsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetFriendsQuery, GetFriendsQueryVariables>(GetFriendsDocument, options);
+        }
+export type GetFriendsQueryHookResult = ReturnType<typeof useGetFriendsQuery>;
+export type GetFriendsLazyQueryHookResult = ReturnType<typeof useGetFriendsLazyQuery>;
+export type GetFriendsQueryResult = Apollo.QueryResult<GetFriendsQuery, GetFriendsQueryVariables>;
+export const GetIncomingFriendRequestsDocument = gql`
+    query GetIncomingFriendRequests {
+  getIncomingFriendRequests {
+    id
+    requesterId
+    requesteeId
+    state
+    friendUser {
+      ...RegularUser
+    }
+  }
+}
+    ${RegularUserFragmentDoc}`;
+
+/**
+ * __useGetIncomingFriendRequestsQuery__
+ *
+ * To run a query within a React component, call `useGetIncomingFriendRequestsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetIncomingFriendRequestsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetIncomingFriendRequestsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetIncomingFriendRequestsQuery(baseOptions?: Apollo.QueryHookOptions<GetIncomingFriendRequestsQuery, GetIncomingFriendRequestsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetIncomingFriendRequestsQuery, GetIncomingFriendRequestsQueryVariables>(GetIncomingFriendRequestsDocument, options);
+      }
+export function useGetIncomingFriendRequestsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetIncomingFriendRequestsQuery, GetIncomingFriendRequestsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetIncomingFriendRequestsQuery, GetIncomingFriendRequestsQueryVariables>(GetIncomingFriendRequestsDocument, options);
+        }
+export type GetIncomingFriendRequestsQueryHookResult = ReturnType<typeof useGetIncomingFriendRequestsQuery>;
+export type GetIncomingFriendRequestsLazyQueryHookResult = ReturnType<typeof useGetIncomingFriendRequestsLazyQuery>;
+export type GetIncomingFriendRequestsQueryResult = Apollo.QueryResult<GetIncomingFriendRequestsQuery, GetIncomingFriendRequestsQueryVariables>;
+export const GetOutgoingFriendRequestsDocument = gql`
+    query GetOutgoingFriendRequests {
+  getOutgoingFriendRequests {
+    id
+    requesterId
+    requesteeId
+    state
+    friendUser {
+      ...RegularUser
+    }
+  }
+}
+    ${RegularUserFragmentDoc}`;
+
+/**
+ * __useGetOutgoingFriendRequestsQuery__
+ *
+ * To run a query within a React component, call `useGetOutgoingFriendRequestsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetOutgoingFriendRequestsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetOutgoingFriendRequestsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetOutgoingFriendRequestsQuery(baseOptions?: Apollo.QueryHookOptions<GetOutgoingFriendRequestsQuery, GetOutgoingFriendRequestsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetOutgoingFriendRequestsQuery, GetOutgoingFriendRequestsQueryVariables>(GetOutgoingFriendRequestsDocument, options);
+      }
+export function useGetOutgoingFriendRequestsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetOutgoingFriendRequestsQuery, GetOutgoingFriendRequestsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetOutgoingFriendRequestsQuery, GetOutgoingFriendRequestsQueryVariables>(GetOutgoingFriendRequestsDocument, options);
+        }
+export type GetOutgoingFriendRequestsQueryHookResult = ReturnType<typeof useGetOutgoingFriendRequestsQuery>;
+export type GetOutgoingFriendRequestsLazyQueryHookResult = ReturnType<typeof useGetOutgoingFriendRequestsLazyQuery>;
+export type GetOutgoingFriendRequestsQueryResult = Apollo.QueryResult<GetOutgoingFriendRequestsQuery, GetOutgoingFriendRequestsQueryVariables>;
 export const MeDocument = gql`
     query Me {
   me {

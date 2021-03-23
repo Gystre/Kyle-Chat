@@ -1,0 +1,3 @@
+mutation SetFriendRequestState($id: Int!, $newState: Int!) {
+    setFriendRequestState(id: $id, newState: $newState)
+}

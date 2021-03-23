@@ -15,6 +15,7 @@ import { User } from "./entities/User";
 import { UserResolver } from "./resolvers/user";
 import { Friend } from "./entities/Friend";
 import { FriendResolver } from "./resolvers/friend";
+import { createUserLoader } from "./utils/createUserLoader";
 
 const main = async () => {
     //create db connection
@@ -83,8 +84,7 @@ const main = async () => {
             res,
             redis,
             // these are batch processors that take multiple small sql statements and process them into one big one
-            // userLoader: createUserLoader(), //a new userLoader will be created on every request
-            // updootLoader: createUpdootLoader(),
+            userLoader: createUserLoader(), //a new userLoader will be created on every request
         }), //make the orm object available to all resolvers
     });
 

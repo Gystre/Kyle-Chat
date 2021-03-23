@@ -1,0 +1,12 @@
+query GetIncomingFriendRequests {
+    getIncomingFriendRequests {
+        id
+        requesterId
+        requesteeId
+        state
+
+        friendUser {
+            ...RegularUser
+        }
+    }
+}

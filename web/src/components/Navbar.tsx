@@ -34,7 +34,9 @@ export const Navbar: React.FC<Props> = () => {
             <Flex align="center">
                 <DarkModeSwitch />
 
-                <Box mr={2}>{data.me.username}</Box>
+                <Box mr={2}>
+                    {data.me.username} (id: {data.me.id})
+                </Box>
                 <Button
                     onClick={async () => {
                         await logout();
