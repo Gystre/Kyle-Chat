@@ -1,6 +1,4 @@
-import { Friend } from "../entities/Friend";
-import { User } from "../entities/User";
-import { isAuth } from "../middleware/isAuth";
+import { FriendRequestState } from "@kyle-chat/common";
 import { MyContext } from "src/types";
 import {
     Arg,
@@ -14,35 +12,39 @@ import {
     UseMiddleware,
 } from "type-graphql";
 import { getConnection } from "typeorm";
+import { Friend } from "../entities/Friend";
+import { User } from "../entities/User";
+import { isAuth } from "../middleware/isAuth";
 import { FriendResponse } from "./responses/FriendResponse";
 import { validateFriend } from "./validation/validateFriend";
-import { FriendRequestState } from "@kyle-chat/common";
 
 /*
 Note:
-Removed friends are considered FriendRequestState.Declined
+Removed friends (u delete them from ur friend list) are considered FriendRequestState.Declined
 */
 
 @Resolver(Friend)
 export class FriendResolver {
-    //will always fetch the creator
+    //resolve the user entity as smallerIdUser so that is accessible as a js object
     @FieldResolver(() => User)
-    friendUser(@Root() friend: Friend, @Ctx() { req, userLoader }: MyContext) {
-        //figure out which one is the friend
-        if (req.session.userId == friend.requesteeId) {
-            //you were the subject of the friend request, so get the other guy's name
-            //batch all sql requests into a single one using dataloader
-            return userLoader.load(friend.requesterId);
-        } else if (req.session.userId == friend.requesterId) {
-            //you sent the friend request, so get the other guy's name
-            return userLoader.load(friend.requesteeId);
-        }
+    @UseMiddleware(isAuth)
+    smallerIdUser(@Root() friend: Friend, @Ctx() { userLoader }: MyContext) {
+        //don't fetch the logged in user
+        //TODO: getting cannot return null for non nullable field even though labeled the column as nullable
+        // if (req.session.userId == friend.smallerUserId) return null;
 
-        return null;
+        //this thing batches all sql requests into a single one using the dataloader
+        return userLoader.load(friend.smallerUserId);
     }
 
-    //might be able to get other people's friends?
-    //so will probs need some way to only see friends that you're friends with
+    @FieldResolver(() => User)
+    @UseMiddleware(isAuth)
+    biggerIdUser(@Root() friend: Friend, @Ctx() { userLoader }: MyContext) {
+        // if (req.session.userId == friend.biggerUserId) return null;
+
+        return userLoader.load(friend.biggerUserId);
+    }
+
     //get the requests that YOU sent that HAVEN'T been accepted
     @UseMiddleware(isAuth)
     @Query(() => [Friend])
@@ -52,11 +54,13 @@ export class FriendResolver {
         const users = await getConnection()
             .getRepository(Friend)
             .createQueryBuilder("friend")
-            .leftJoinAndSelect("friend.requestee", "user")
-            .where("friend.requesterId = :userId and friend.state = :state", {
-                userId: req.session.userId,
-                state: FriendRequestState.Pending,
-            })
+            .where(
+                "(friend.smallerUserId = :userId or friend.biggerUserId = :userId) and friend.state = :state and friend.recentActionUserId = :userId",
+                {
+                    userId: req.session.userId,
+                    state: FriendRequestState.Pending,
+                }
+            )
             .orderBy('friend."createdAt"', "DESC")
             .getMany();
 
@@ -72,11 +76,13 @@ export class FriendResolver {
         const users = await getConnection()
             .getRepository(Friend)
             .createQueryBuilder("friend")
-            .leftJoinAndSelect("friend.requestee", "user")
-            .where("friend.requesteeId = :userId and friend.state = :state", {
-                userId: req.session.userId,
-                state: FriendRequestState.Pending,
-            })
+            .where(
+                "(friend.smallerUserId = :userId or friend.biggerUserId = :userId) and friend.state = :state and friend.recentActionUserId != :userId",
+                {
+                    userId: req.session.userId,
+                    state: FriendRequestState.Pending,
+                }
+            )
             .orderBy('friend."createdAt"', "DESC")
             .getMany();
 
@@ -87,12 +93,12 @@ export class FriendResolver {
     @UseMiddleware(isAuth)
     @Query(() => [Friend])
     async getFriends(@Ctx() { req }: MyContext): Promise<Friend[]> {
+        //fetches both relationships somehow, probably cuz of the resolvers
         const users = await getConnection()
             .getRepository(Friend)
             .createQueryBuilder("friend")
-            .leftJoinAndSelect("friend.requestee", "user")
             .where(
-                "(friend.requesterId = :userId or friend.requesteeId = :userId) and friend.state = :state",
+                "(friend.smallerUserId = :userId or friend.biggerUserId = :userId) and friend.state = :state",
                 {
                     userId: req.session.userId,
                     state: FriendRequestState.Accepted,
@@ -107,7 +113,7 @@ export class FriendResolver {
     @Mutation(() => FriendResponse)
     @UseMiddleware(isAuth)
     async sendFriendRequest(
-        @Arg("requesteeId", () => Int) otherId: number,
+        @Arg("otherId", () => Int) otherId: number,
         @Ctx() { req }: MyContext
     ): Promise<FriendResponse> {
         const errors = await validateFriend(req.session.userId, otherId);
@@ -115,20 +121,25 @@ export class FriendResolver {
             return { errors };
         }
 
-        //make sure the user doesn't have a pending request and they aren't already accepted
-        //TODO: cut this down to a single sql statement
-        //it fetches the whole user when it could just return a bool if it found it
+        //see if there is already a link between the two
+        //we can use this field, if found, to determine whether or not the person has a pending request, they already sent a request, or if they're already a friend
+        //CRAZYY I KNOW RIGHT????
         const found = await Friend.findOne({
-            where: { requesteeId: otherId, requesterId: req.session.userId },
+            where: [
+                { biggerUserId: otherId, smallerUserId: req.session.userId },
+                { biggerUserId: req.session.userId, smallerUserId: otherId },
+            ],
         });
 
         if (found?.state == FriendRequestState.Pending) {
             return {
                 errors: [
                     {
-                        field: "requesteeId",
+                        field: "otherId",
                         message:
-                            "you already have a pending request to this person",
+                            found.recentActionUserId == req.session.userId
+                                ? "you already have a pending request to this person"
+                                : "this person has already sent you a request, go accept it",
                     },
                 ],
             };
@@ -136,67 +147,36 @@ export class FriendResolver {
             return {
                 errors: [
                     {
-                        field: "requesteeId",
+                        field: "otherId",
                         message: "this person is already ur friend",
                     },
                 ],
             };
         }
 
-        //if the user tries to send a request to someone who has already sent them a request, give them an error
-        const otherFound = await Friend.findOne({
-            where: {
-                requesteeId: req.session.userId,
-                requesterId: otherId,
-            },
-        });
-        if (otherFound?.state == FriendRequestState.Pending) {
-            return {
-                errors: [
-                    {
-                        field: "requesteeId",
-                        message:
-                            "this person already sent u a request go accept it bruh",
-                    },
-                ],
-            };
-        }
+        //make sure the bigger id gets placed into the bigger id row
+        const biggerUserId =
+            req.session.userId > otherId ? req.session.userId : otherId;
+        const smallerUserId =
+            req.session.userId < otherId ? req.session.userId : otherId;
 
-        //check if a relationship between these two users have already been established
-        //this can happen if a user removes a friend, then they add each other back, modify that row and avoid creating a new one
-        const existingRelationship = await Friend.findOne({
-            where: [
-                //we need to check both b/c an existing relationship can be either way
-                { requesteeId: otherId, requesterId: req.session.userId },
-                { requesteeId: req.session.userId, requesterId: otherId },
-            ],
-        });
-
-        if (existingRelationship) {
-            //an existing relationship exists so update that row and return the found relationship
-            await getConnection().query(
-                `
-                update friend
-                set state = $1
-                where id=$2
-            `,
-                [FriendRequestState.Pending, existingRelationship.id]
-            );
-
-            return { friend: existingRelationship };
-        }
-
-        //TODO: fix double fetching here, should be using the user fetched from the validateFriend
-        const requestee = await User.findOne(otherId);
+        const [smallerUser, biggerUser] = await User.findByIds(
+            [smallerUserId, biggerUserId],
+            { order: { id: "ASC" } } //make sure they come in least -> greatest
+        );
 
         //create a new entry in the table
-        const result = await Friend.create({
-            requesterId: req.session.userId,
-            requestee,
-        }).save();
-
         return {
-            friend: result,
+            friend: await Friend.create({
+                biggerUserId,
+                biggerIdUser: biggerUser,
+
+                smallerUserId,
+                smallerIdUser: smallerUser,
+
+                //the most recent user to update this row will be the person who sends the request
+                recentActionUserId: req.session.userId,
+            }).save(),
         };
     }
 
@@ -212,7 +192,7 @@ export class FriendResolver {
             `
                 update friend 
                 set state = $1
-                where id = $2 and "requesteeId" = $3 or "requesterId" = $3
+                where id = $2 and ("smallerUserId" = $3 or "biggerUserId" = $3)
                 `,
             [newState, id, req.session.userId]
         );

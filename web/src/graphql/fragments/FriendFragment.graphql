@@ -1,0 +1,14 @@
+fragment FriendFragment on Friend {
+    id
+    state
+
+    smallerUserId
+    smallerIdUser {
+        ...RegularUser
+    }
+
+    biggerUserId
+    biggerIdUser {
+        ...RegularUser
+    }
+}

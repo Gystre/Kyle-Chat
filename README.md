@@ -4,14 +4,18 @@ This full stack application will allow users to sign in, add friends, and chat i
 
 ## Todo
 
-- user profiles that let you set your status and see who your friends are
--   user is able to add and remove other users to their list of friends using a unique id
--   ui to be able to see who your friends are, letting you click on them to open a chat box like discord
+-   use await Promise.all for error checking on backend (https://github.com/benawad/slack-clone-server/blob/f86d853d1aab82a82ec6a2eb2a81455bebd56039/resolvers/team.js#L31)
+-   put a limit on how long a person's name can be
+-   be able to click on friends to open a chat box like discord
+-   use gravatar for default profile pictures and let user set them later
 -   text editing that supports rich text
 -   scalable send message flow with rate limit of 5 messages per second or something like that
 -   upload images and files and display them in the chat
 
 ## Done
+
+-   user is able to add and remove other users to their list of friends using a unique id
+-   able to see who your friends are through the ui
 
 ## Where to improve
 

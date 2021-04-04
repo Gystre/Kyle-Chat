@@ -16,17 +16,30 @@ export type Scalars = {
 
 export type Query = {
   __typename?: 'Query';
-  hello: Scalars['String'];
-  me?: Maybe<User>;
-  findById?: Maybe<User>;
   getOutgoingFriendRequests: Array<Friend>;
   getIncomingFriendRequests: Array<Friend>;
   getFriends: Array<Friend>;
+  hello: Scalars['String'];
+  me?: Maybe<User>;
+  findById?: Maybe<User>;
 };
 
 
 export type QueryFindByIdArgs = {
   id: Scalars['Int'];
+};
+
+export type Friend = {
+  __typename?: 'Friend';
+  id: Scalars['Float'];
+  smallerUserId: Scalars['Float'];
+  biggerUserId: Scalars['Float'];
+  recentActionUserId: Scalars['Float'];
+  state: Scalars['Float'];
+  createdAt: Scalars['String'];
+  updatedAt: Scalars['String'];
+  smallerIdUser: User;
+  biggerIdUser: User;
 };
 
 export type User = {
@@ -39,24 +52,31 @@ export type User = {
   updatedAt: Scalars['String'];
 };
 
-export type Friend = {
-  __typename?: 'Friend';
-  id: Scalars['Float'];
-  requesterId: Scalars['Float'];
-  requesteeId: Scalars['Float'];
-  state: Scalars['Float'];
-  createdAt: Scalars['String'];
-  updatedAt: Scalars['String'];
-  friendUser: User;
-};
-
 export type Mutation = {
   __typename?: 'Mutation';
+  sendFriendRequest: FriendResponse;
+  setFriendRequestState: Scalars['Boolean'];
+  createGroup: GroupResponse;
   register: UserResponse;
   login: UserResponse;
   logout: Scalars['Boolean'];
-  sendFriendRequest: FriendResponse;
-  setFriendRequestState: Scalars['Boolean'];
+};
+
+
+export type MutationSendFriendRequestArgs = {
+  otherId: Scalars['Int'];
+};
+
+
+export type MutationSetFriendRequestStateArgs = {
+  newState: Scalars['Int'];
+  id: Scalars['Int'];
+};
+
+
+export type MutationCreateGroupArgs = {
+  name: Scalars['String'];
+  ids: Array<Scalars['Int']>;
 };
 
 
@@ -70,21 +90,10 @@ export type MutationLoginArgs = {
   usernameOrEmail: Scalars['String'];
 };
 
-
-export type MutationSendFriendRequestArgs = {
-  requesteeId: Scalars['Int'];
-};
-
-
-export type MutationSetFriendRequestStateArgs = {
-  newState: Scalars['Int'];
-  id: Scalars['Int'];
-};
-
-export type UserResponse = {
-  __typename?: 'UserResponse';
+export type FriendResponse = {
+  __typename?: 'FriendResponse';
   errors?: Maybe<Array<FieldError>>;
-  user?: Maybe<User>;
+  friend?: Maybe<Friend>;
 };
 
 export type FieldError = {
@@ -93,17 +102,44 @@ export type FieldError = {
   message: Scalars['String'];
 };
 
+export type GroupResponse = {
+  __typename?: 'GroupResponse';
+  group?: Maybe<Group>;
+  error?: Maybe<Scalars['String']>;
+};
+
+export type Group = {
+  __typename?: 'Group';
+  id: Scalars['Float'];
+  name: Scalars['String'];
+  creatorId: Scalars['Int'];
+  createdAt: Scalars['String'];
+  updatedAt: Scalars['String'];
+};
+
+export type UserResponse = {
+  __typename?: 'UserResponse';
+  errors?: Maybe<Array<FieldError>>;
+  user?: Maybe<User>;
+};
+
 export type UsernamePasswordInput = {
   email: Scalars['String'];
   username: Scalars['String'];
   password: Scalars['String'];
 };
 
-export type FriendResponse = {
-  __typename?: 'FriendResponse';
-  errors?: Maybe<Array<FieldError>>;
-  friend?: Maybe<Friend>;
-};
+export type FriendFragmentFragment = (
+  { __typename?: 'Friend' }
+  & Pick<Friend, 'id' | 'state' | 'smallerUserId' | 'biggerUserId'>
+  & { smallerIdUser: (
+    { __typename?: 'User' }
+    & RegularUserFragment
+  ), biggerIdUser: (
+    { __typename?: 'User' }
+    & RegularUserFragment
+  ) }
+);
 
 export type RegularErrorFragment = (
   { __typename?: 'FieldError' }
@@ -162,7 +198,7 @@ export type RegisterMutation = (
 );
 
 export type SendFriendRequestMutationVariables = Exact<{
-  requesteeId: Scalars['Int'];
+  otherId: Scalars['Int'];
 }>;
 
 
@@ -172,7 +208,7 @@ export type SendFriendRequestMutation = (
     { __typename?: 'FriendResponse' }
     & { friend?: Maybe<(
       { __typename?: 'Friend' }
-      & Pick<Friend, 'id' | 'requesterId' | 'requesteeId' | 'state'>
+      & FriendFragmentFragment
     )>, errors?: Maybe<Array<(
       { __typename?: 'FieldError' }
       & Pick<FieldError, 'field' | 'message'>
@@ -198,11 +234,7 @@ export type GetFriendsQuery = (
   { __typename?: 'Query' }
   & { getFriends: Array<(
     { __typename?: 'Friend' }
-    & Pick<Friend, 'id' | 'requesterId' | 'requesteeId'>
-    & { friendUser: (
-      { __typename?: 'User' }
-      & RegularUserFragment
-    ) }
+    & FriendFragmentFragment
   )> }
 );
 
@@ -213,11 +245,7 @@ export type GetIncomingFriendRequestsQuery = (
   { __typename?: 'Query' }
   & { getIncomingFriendRequests: Array<(
     { __typename?: 'Friend' }
-    & Pick<Friend, 'id' | 'requesterId' | 'requesteeId' | 'state'>
-    & { friendUser: (
-      { __typename?: 'User' }
-      & RegularUserFragment
-    ) }
+    & FriendFragmentFragment
   )> }
 );
 
@@ -228,11 +256,7 @@ export type GetOutgoingFriendRequestsQuery = (
   { __typename?: 'Query' }
   & { getOutgoingFriendRequests: Array<(
     { __typename?: 'Friend' }
-    & Pick<Friend, 'id' | 'requesterId' | 'requesteeId' | 'state'>
-    & { friendUser: (
-      { __typename?: 'User' }
-      & RegularUserFragment
-    ) }
+    & FriendFragmentFragment
   )> }
 );
 
@@ -247,16 +271,30 @@ export type MeQuery = (
   )> }
 );
 
-export const RegularErrorFragmentDoc = gql`
-    fragment RegularError on FieldError {
-  field
-  message
-}
-    `;
 export const RegularUserFragmentDoc = gql`
     fragment RegularUser on User {
   id
   username
+}
+    `;
+export const FriendFragmentFragmentDoc = gql`
+    fragment FriendFragment on Friend {
+  id
+  state
+  smallerUserId
+  smallerIdUser {
+    ...RegularUser
+  }
+  biggerUserId
+  biggerIdUser {
+    ...RegularUser
+  }
+}
+    ${RegularUserFragmentDoc}`;
+export const RegularErrorFragmentDoc = gql`
+    fragment RegularError on FieldError {
+  field
+  message
 }
     `;
 export const RegularUserResponseFragmentDoc = gql`
@@ -368,13 +406,10 @@ export type RegisterMutationHookResult = ReturnType<typeof useRegisterMutation>;
 export type RegisterMutationResult = Apollo.MutationResult<RegisterMutation>;
 export type RegisterMutationOptions = Apollo.BaseMutationOptions<RegisterMutation, RegisterMutationVariables>;
 export const SendFriendRequestDocument = gql`
-    mutation SendFriendRequest($requesteeId: Int!) {
-  sendFriendRequest(requesteeId: $requesteeId) {
+    mutation SendFriendRequest($otherId: Int!) {
+  sendFriendRequest(otherId: $otherId) {
     friend {
-      id
-      requesterId
-      requesteeId
-      state
+      ...FriendFragment
     }
     errors {
       field
@@ -382,7 +417,7 @@ export const SendFriendRequestDocument = gql`
     }
   }
 }
-    `;
+    ${FriendFragmentFragmentDoc}`;
 export type SendFriendRequestMutationFn = Apollo.MutationFunction<SendFriendRequestMutation, SendFriendRequestMutationVariables>;
 
 /**
@@ -398,7 +433,7 @@ export type SendFriendRequestMutationFn = Apollo.MutationFunction<SendFriendRequ
  * @example
  * const [sendFriendRequestMutation, { data, loading, error }] = useSendFriendRequestMutation({
  *   variables: {
- *      requesteeId: // value for 'requesteeId'
+ *      otherId: // value for 'otherId'
  *   },
  * });
  */
@@ -444,15 +479,10 @@ export type SetFriendRequestStateMutationOptions = Apollo.BaseMutationOptions<Se
 export const GetFriendsDocument = gql`
     query GetFriends {
   getFriends {
-    id
-    requesterId
-    requesteeId
-    friendUser {
-      ...RegularUser
-    }
+    ...FriendFragment
   }
 }
-    ${RegularUserFragmentDoc}`;
+    ${FriendFragmentFragmentDoc}`;
 
 /**
  * __useGetFriendsQuery__
@@ -483,16 +513,10 @@ export type GetFriendsQueryResult = Apollo.QueryResult<GetFriendsQuery, GetFrien
 export const GetIncomingFriendRequestsDocument = gql`
     query GetIncomingFriendRequests {
   getIncomingFriendRequests {
-    id
-    requesterId
-    requesteeId
-    state
-    friendUser {
-      ...RegularUser
-    }
+    ...FriendFragment
   }
 }
-    ${RegularUserFragmentDoc}`;
+    ${FriendFragmentFragmentDoc}`;
 
 /**
  * __useGetIncomingFriendRequestsQuery__
@@ -523,16 +547,10 @@ export type GetIncomingFriendRequestsQueryResult = Apollo.QueryResult<GetIncomin
 export const GetOutgoingFriendRequestsDocument = gql`
     query GetOutgoingFriendRequests {
   getOutgoingFriendRequests {
-    id
-    requesterId
-    requesteeId
-    state
-    friendUser {
-      ...RegularUser
-    }
+    ...FriendFragment
   }
 }
-    ${RegularUserFragmentDoc}`;
+    ${FriendFragmentFragmentDoc}`;
 
 /**
  * __useGetOutgoingFriendRequestsQuery__

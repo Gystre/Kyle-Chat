@@ -1,12 +1,5 @@
 query GetOutgoingFriendRequests {
     getOutgoingFriendRequests {
-        id
-        requesterId
-        requesteeId
-        state
-
-        friendUser {
-            ...RegularUser
-        }
+        ...FriendFragment
     }
 }

@@ -1,12 +1,9 @@
-mutation SendFriendRequest($requesteeId: Int!){
-    sendFriendRequest(requesteeId:$requesteeId){
-        friend{
-            id
-            requesterId
-            requesteeId
-            state
+mutation SendFriendRequest($otherId: Int!) {
+    sendFriendRequest(otherId: $otherId) {
+        friend {
+            ...FriendFragment
         }
-        errors{
+        errors {
             field
             message
         }

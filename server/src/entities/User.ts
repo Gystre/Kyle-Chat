@@ -1,14 +1,14 @@
-import { ObjectType, Field } from "type-graphql";
+import { Field, ObjectType } from "type-graphql";
 import {
-    Entity,
     BaseEntity,
-    CreateDateColumn,
-    UpdateDateColumn,
     Column,
+    CreateDateColumn,
+    Entity,
+    ManyToMany,
     PrimaryGeneratedColumn,
-    OneToMany,
+    UpdateDateColumn,
 } from "typeorm";
-import { Friend } from "./Friend";
+import { Group } from "./Group";
 
 @ObjectType()
 @Entity()
@@ -29,6 +29,10 @@ export class User extends BaseEntity {
     @Column()
     password!: string;
 
+    //the groups that the user is apart of
+    @ManyToMany(() => Group, (group) => group.users)
+    groups: Group[];
+
     @Field(() => String)
     @CreateDateColumn()
     createdAt = new Date();
@@ -36,7 +40,4 @@ export class User extends BaseEntity {
     @Field(() => String)
     @UpdateDateColumn()
     updatedAt = new Date();
-
-    @OneToMany(() => Friend, (friend) => friend.requestee)
-    friends: Friend[];
 }

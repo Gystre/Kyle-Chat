@@ -1,20 +1,23 @@
-import "reflect-metadata";
+import { ApolloServer } from "apollo-server-express";
+import connectRedis from "connect-redis";
+import cors from "cors";
 import "dotenv-safe/config"; //takes vars in .env and makes them environment variables
-import { createConnection } from "typeorm";
-import path from "path";
 import express from "express";
 import session from "express-session";
-import connectRedis from "connect-redis";
 import Redis from "ioredis";
-import { COOKIE_NAME, __prod__ } from "./constants";
-import cors from "cors";
-import { ApolloServer } from "apollo-server-express";
+import path from "path";
+import "reflect-metadata";
+import { Socket } from "socket.io";
 import { buildSchema } from "type-graphql";
-import { HelloResolver } from "./resolvers/hello";
-import { User } from "./entities/User";
-import { UserResolver } from "./resolvers/user";
+import { createConnection } from "typeorm";
+import { COOKIE_NAME, __prod__ } from "./constants";
 import { Friend } from "./entities/Friend";
+import { Group } from "./entities/Group";
+import { User } from "./entities/User";
 import { FriendResolver } from "./resolvers/friend";
+import { GroupResolver } from "./resolvers/group";
+import { HelloResolver } from "./resolvers/hello";
+import { UserResolver } from "./resolvers/user";
 import { createUserLoader } from "./utils/createUserLoader";
 
 const main = async () => {
@@ -25,14 +28,14 @@ const main = async () => {
         logging: true,
         // synchronize: true, //create the tables automatically without running a migration (good for development)
         migrations: [path.join(__dirname, "./migrations/*")],
-        entities: [User, Friend], //MAKE SURE TO ADD ANY NEW ENTITIES HERE
+        entities: [User, Friend, Group], //MAKE SURE TO ADD ANY NEW ENTITIES HERE
     });
+
     //run the migrations inside the migrations folder
     // await connection.runMigrations();
 
-    //if you need to delete all the posts
+    //if you need to delete stuff in table
     // await Comment.delete({});
-    // console.log("deleted comments");
 
     //create an instance of express
     const app = express();
@@ -49,6 +52,7 @@ const main = async () => {
     app.use(
         cors({
             origin: process.env.CORS_ORIGIN,
+            methods: ["GET", "POST"],
             credentials: true,
         })
     );
@@ -69,33 +73,55 @@ const main = async () => {
                 domain: __prod__ ? ".kylegodly.com" : undefined, //need to add domain b/c sometimes server doesn't always forward cookie correctly
             },
             saveUninitialized: false,
-            secret: process.env.SESSION_SECRET, //should make this an environment variable
+            secret: process.env.SESSION_SECRET,
             resave: false, //makes sure not continuing to ping redis
         })
     );
 
     const apolloServer = new ApolloServer({
         schema: await buildSchema({
-            resolvers: [HelloResolver, UserResolver, FriendResolver],
+            resolvers: [
+                HelloResolver,
+                UserResolver,
+                FriendResolver,
+                GroupResolver,
+            ],
             validate: false,
         }),
+
+        //make the orm object available to all resolvers
         context: ({ req, res }) => ({
             req,
             res,
             redis,
             // these are batch processors that take multiple small sql statements and process them into one big one
             userLoader: createUserLoader(), //a new userLoader will be created on every request
-        }), //make the orm object available to all resolvers
+        }),
     });
 
-    //craete graphql endpoint for us on express
+    //creates graphql endpoint for us on express
     apolloServer.applyMiddleware({
         app,
         cors: false,
     });
 
-    app.listen(parseInt(process.env.PORT), () => {
+    //and finally start the server
+    const httpServer = app.listen(parseInt(process.env.PORT), () => {
         console.log("server started on localhost:4000");
+    });
+
+    //now do socket io stuff
+    const io = require("socket.io")(httpServer, {
+        cors: true,
+        origins: [process.env.CORS_ORIGIN],
+    });
+
+    io.on("connection", function (socket: Socket) {
+        console.log("user connected");
+
+        socket.on("disconnect", () => {
+            console.log("user disconnected");
+        });
     });
 
     console.log("worldddddddd");
