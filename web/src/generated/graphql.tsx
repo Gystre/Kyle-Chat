@@ -14,19 +14,10 @@ export type Scalars = {
   Float: number;
 };
 
-export type Query = {
-  __typename?: 'Query';
-  getOutgoingFriendRequests: Array<Friend>;
-  getIncomingFriendRequests: Array<Friend>;
-  getFriends: Array<Friend>;
-  hello: Scalars['String'];
-  me?: Maybe<User>;
-  findById?: Maybe<User>;
-};
-
-
-export type QueryFindByIdArgs = {
-  id: Scalars['Int'];
+export type FieldError = {
+  __typename?: 'FieldError';
+  field: Scalars['String'];
+  message: Scalars['String'];
 };
 
 export type Friend = {
@@ -42,14 +33,29 @@ export type Friend = {
   biggerIdUser: User;
 };
 
-export type User = {
-  __typename?: 'User';
+export type FriendResponse = {
+  __typename?: 'FriendResponse';
+  errors?: Maybe<Array<FieldError>>;
+  friend?: Maybe<Friend>;
+};
+
+export type Group = {
+  __typename?: 'Group';
   id: Scalars['Float'];
-  username: Scalars['String'];
-  email: Scalars['String'];
-  password: Scalars['String'];
+  type: Scalars['Float'];
+  name: Scalars['String'];
+  imageUrl: Scalars['String'];
+  creatorId: Scalars['Float'];
   createdAt: Scalars['String'];
   updatedAt: Scalars['String'];
+  creator: User;
+  users: Array<User>;
+};
+
+export type GroupResponse = {
+  __typename?: 'GroupResponse';
+  errors?: Maybe<Array<FieldError>>;
+  group?: Maybe<Group>;
 };
 
 export type Mutation = {
@@ -57,6 +63,8 @@ export type Mutation = {
   sendFriendRequest: FriendResponse;
   setFriendRequestState: Scalars['Boolean'];
   createGroup: GroupResponse;
+  createDirectMessage: GroupResponse;
+  createDirectMessageGroup: GroupResponse;
   register: UserResponse;
   login: UserResponse;
   logout: Scalars['Boolean'];
@@ -75,8 +83,20 @@ export type MutationSetFriendRequestStateArgs = {
 
 
 export type MutationCreateGroupArgs = {
+  type: Scalars['Int'];
   name: Scalars['String'];
-  ids: Array<Scalars['Int']>;
+  otherIds: Array<Scalars['Int']>;
+};
+
+
+export type MutationCreateDirectMessageArgs = {
+  otherId: Scalars['Int'];
+};
+
+
+export type MutationCreateDirectMessageGroupArgs = {
+  name: Scalars['String'];
+  otherIds: Array<Scalars['Int']>;
 };
 
 
@@ -90,29 +110,35 @@ export type MutationLoginArgs = {
   usernameOrEmail: Scalars['String'];
 };
 
-export type FriendResponse = {
-  __typename?: 'FriendResponse';
-  errors?: Maybe<Array<FieldError>>;
-  friend?: Maybe<Friend>;
+export type Query = {
+  __typename?: 'Query';
+  getOutgoingFriendRequests: Array<Friend>;
+  getIncomingFriendRequests: Array<Friend>;
+  getFriends: Array<Friend>;
+  getGroups: Array<Group>;
+  getGroup: GroupResponse;
+  hello: Scalars['String'];
+  me?: Maybe<User>;
+  findById?: Maybe<User>;
 };
 
-export type FieldError = {
-  __typename?: 'FieldError';
-  field: Scalars['String'];
-  message: Scalars['String'];
+
+export type QueryGetGroupArgs = {
+  groupId: Scalars['Int'];
 };
 
-export type GroupResponse = {
-  __typename?: 'GroupResponse';
-  group?: Maybe<Group>;
-  error?: Maybe<Scalars['String']>;
+
+export type QueryFindByIdArgs = {
+  id: Scalars['Int'];
 };
 
-export type Group = {
-  __typename?: 'Group';
+export type User = {
+  __typename?: 'User';
   id: Scalars['Float'];
-  name: Scalars['String'];
-  creatorId: Scalars['Int'];
+  username: Scalars['String'];
+  email: Scalars['String'];
+  password: Scalars['String'];
+  imageUrl: Scalars['String'];
   createdAt: Scalars['String'];
   updatedAt: Scalars['String'];
 };
@@ -141,6 +167,15 @@ export type FriendFragmentFragment = (
   ) }
 );
 
+export type GroupFragmentFragment = (
+  { __typename?: 'Group' }
+  & Pick<Group, 'id' | 'name' | 'type' | 'imageUrl'>
+  & { creator: (
+    { __typename?: 'User' }
+    & Pick<User, 'id' | 'username'>
+  ) }
+);
+
 export type RegularErrorFragment = (
   { __typename?: 'FieldError' }
   & Pick<FieldError, 'field' | 'message'>
@@ -148,7 +183,7 @@ export type RegularErrorFragment = (
 
 export type RegularUserFragment = (
   { __typename?: 'User' }
-  & Pick<User, 'id' | 'username'>
+  & Pick<User, 'id' | 'username' | 'imageUrl'>
 );
 
 export type RegularUserResponseFragment = (
@@ -160,6 +195,45 @@ export type RegularUserResponseFragment = (
     { __typename?: 'User' }
     & RegularUserFragment
   )> }
+);
+
+export type CreateDirectMessageMutationVariables = Exact<{
+  otherId: Scalars['Int'];
+}>;
+
+
+export type CreateDirectMessageMutation = (
+  { __typename?: 'Mutation' }
+  & { createDirectMessage: (
+    { __typename?: 'GroupResponse' }
+    & { group?: Maybe<(
+      { __typename?: 'Group' }
+      & GroupFragmentFragment
+    )>, errors?: Maybe<Array<(
+      { __typename?: 'FieldError' }
+      & RegularErrorFragment
+    )>> }
+  ) }
+);
+
+export type CreateDirectMessageGroupMutationVariables = Exact<{
+  name: Scalars['String'];
+  otherIds: Array<Scalars['Int']> | Scalars['Int'];
+}>;
+
+
+export type CreateDirectMessageGroupMutation = (
+  { __typename?: 'Mutation' }
+  & { createDirectMessageGroup: (
+    { __typename?: 'GroupResponse' }
+    & { group?: Maybe<(
+      { __typename?: 'Group' }
+      & GroupFragmentFragment
+    )>, errors?: Maybe<Array<(
+      { __typename?: 'FieldError' }
+      & RegularErrorFragment
+    )>> }
+  ) }
 );
 
 export type LoginMutationVariables = Exact<{
@@ -211,7 +285,7 @@ export type SendFriendRequestMutation = (
       & FriendFragmentFragment
     )>, errors?: Maybe<Array<(
       { __typename?: 'FieldError' }
-      & Pick<FieldError, 'field' | 'message'>
+      & RegularErrorFragment
     )>> }
   ) }
 );
@@ -235,6 +309,44 @@ export type GetFriendsQuery = (
   & { getFriends: Array<(
     { __typename?: 'Friend' }
     & FriendFragmentFragment
+  )> }
+);
+
+export type GetGroupQueryVariables = Exact<{
+  groupId: Scalars['Int'];
+}>;
+
+
+export type GetGroupQuery = (
+  { __typename?: 'Query' }
+  & { getGroup: (
+    { __typename?: 'GroupResponse' }
+    & { group?: Maybe<(
+      { __typename?: 'Group' }
+      & { users: Array<(
+        { __typename?: 'User' }
+        & RegularUserFragment
+      )> }
+      & GroupFragmentFragment
+    )>, errors?: Maybe<Array<(
+      { __typename?: 'FieldError' }
+      & RegularErrorFragment
+    )>> }
+  ) }
+);
+
+export type GetGroupsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetGroupsQuery = (
+  { __typename?: 'Query' }
+  & { getGroups: Array<(
+    { __typename?: 'Group' }
+    & { users: Array<(
+      { __typename?: 'User' }
+      & RegularUserFragment
+    )> }
+    & GroupFragmentFragment
   )> }
 );
 
@@ -275,6 +387,7 @@ export const RegularUserFragmentDoc = gql`
     fragment RegularUser on User {
   id
   username
+  imageUrl
 }
     `;
 export const FriendFragmentFragmentDoc = gql`
@@ -291,6 +404,18 @@ export const FriendFragmentFragmentDoc = gql`
   }
 }
     ${RegularUserFragmentDoc}`;
+export const GroupFragmentFragmentDoc = gql`
+    fragment GroupFragment on Group {
+  id
+  name
+  type
+  imageUrl
+  creator {
+    id
+    username
+  }
+}
+    `;
 export const RegularErrorFragmentDoc = gql`
     fragment RegularError on FieldError {
   field
@@ -308,6 +433,85 @@ export const RegularUserResponseFragmentDoc = gql`
 }
     ${RegularErrorFragmentDoc}
 ${RegularUserFragmentDoc}`;
+export const CreateDirectMessageDocument = gql`
+    mutation CreateDirectMessage($otherId: Int!) {
+  createDirectMessage(otherId: $otherId) {
+    group {
+      ...GroupFragment
+    }
+    errors {
+      ...RegularError
+    }
+  }
+}
+    ${GroupFragmentFragmentDoc}
+${RegularErrorFragmentDoc}`;
+export type CreateDirectMessageMutationFn = Apollo.MutationFunction<CreateDirectMessageMutation, CreateDirectMessageMutationVariables>;
+
+/**
+ * __useCreateDirectMessageMutation__
+ *
+ * To run a mutation, you first call `useCreateDirectMessageMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateDirectMessageMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createDirectMessageMutation, { data, loading, error }] = useCreateDirectMessageMutation({
+ *   variables: {
+ *      otherId: // value for 'otherId'
+ *   },
+ * });
+ */
+export function useCreateDirectMessageMutation(baseOptions?: Apollo.MutationHookOptions<CreateDirectMessageMutation, CreateDirectMessageMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateDirectMessageMutation, CreateDirectMessageMutationVariables>(CreateDirectMessageDocument, options);
+      }
+export type CreateDirectMessageMutationHookResult = ReturnType<typeof useCreateDirectMessageMutation>;
+export type CreateDirectMessageMutationResult = Apollo.MutationResult<CreateDirectMessageMutation>;
+export type CreateDirectMessageMutationOptions = Apollo.BaseMutationOptions<CreateDirectMessageMutation, CreateDirectMessageMutationVariables>;
+export const CreateDirectMessageGroupDocument = gql`
+    mutation CreateDirectMessageGroup($name: String!, $otherIds: [Int!]!) {
+  createDirectMessageGroup(name: $name, otherIds: $otherIds) {
+    group {
+      ...GroupFragment
+    }
+    errors {
+      ...RegularError
+    }
+  }
+}
+    ${GroupFragmentFragmentDoc}
+${RegularErrorFragmentDoc}`;
+export type CreateDirectMessageGroupMutationFn = Apollo.MutationFunction<CreateDirectMessageGroupMutation, CreateDirectMessageGroupMutationVariables>;
+
+/**
+ * __useCreateDirectMessageGroupMutation__
+ *
+ * To run a mutation, you first call `useCreateDirectMessageGroupMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateDirectMessageGroupMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createDirectMessageGroupMutation, { data, loading, error }] = useCreateDirectMessageGroupMutation({
+ *   variables: {
+ *      name: // value for 'name'
+ *      otherIds: // value for 'otherIds'
+ *   },
+ * });
+ */
+export function useCreateDirectMessageGroupMutation(baseOptions?: Apollo.MutationHookOptions<CreateDirectMessageGroupMutation, CreateDirectMessageGroupMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateDirectMessageGroupMutation, CreateDirectMessageGroupMutationVariables>(CreateDirectMessageGroupDocument, options);
+      }
+export type CreateDirectMessageGroupMutationHookResult = ReturnType<typeof useCreateDirectMessageGroupMutation>;
+export type CreateDirectMessageGroupMutationResult = Apollo.MutationResult<CreateDirectMessageGroupMutation>;
+export type CreateDirectMessageGroupMutationOptions = Apollo.BaseMutationOptions<CreateDirectMessageGroupMutation, CreateDirectMessageGroupMutationVariables>;
 export const LoginDocument = gql`
     mutation Login($usernameOrEmail: String!, $password: String!) {
   login(usernameOrEmail: $usernameOrEmail, password: $password) {
@@ -412,12 +616,12 @@ export const SendFriendRequestDocument = gql`
       ...FriendFragment
     }
     errors {
-      field
-      message
+      ...RegularError
     }
   }
 }
-    ${FriendFragmentFragmentDoc}`;
+    ${FriendFragmentFragmentDoc}
+${RegularErrorFragmentDoc}`;
 export type SendFriendRequestMutationFn = Apollo.MutationFunction<SendFriendRequestMutation, SendFriendRequestMutationVariables>;
 
 /**
@@ -510,6 +714,89 @@ export function useGetFriendsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions
 export type GetFriendsQueryHookResult = ReturnType<typeof useGetFriendsQuery>;
 export type GetFriendsLazyQueryHookResult = ReturnType<typeof useGetFriendsLazyQuery>;
 export type GetFriendsQueryResult = Apollo.QueryResult<GetFriendsQuery, GetFriendsQueryVariables>;
+export const GetGroupDocument = gql`
+    query GetGroup($groupId: Int!) {
+  getGroup(groupId: $groupId) {
+    group {
+      ...GroupFragment
+      users {
+        ...RegularUser
+      }
+    }
+    errors {
+      ...RegularError
+    }
+  }
+}
+    ${GroupFragmentFragmentDoc}
+${RegularUserFragmentDoc}
+${RegularErrorFragmentDoc}`;
+
+/**
+ * __useGetGroupQuery__
+ *
+ * To run a query within a React component, call `useGetGroupQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetGroupQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetGroupQuery({
+ *   variables: {
+ *      groupId: // value for 'groupId'
+ *   },
+ * });
+ */
+export function useGetGroupQuery(baseOptions: Apollo.QueryHookOptions<GetGroupQuery, GetGroupQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetGroupQuery, GetGroupQueryVariables>(GetGroupDocument, options);
+      }
+export function useGetGroupLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetGroupQuery, GetGroupQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetGroupQuery, GetGroupQueryVariables>(GetGroupDocument, options);
+        }
+export type GetGroupQueryHookResult = ReturnType<typeof useGetGroupQuery>;
+export type GetGroupLazyQueryHookResult = ReturnType<typeof useGetGroupLazyQuery>;
+export type GetGroupQueryResult = Apollo.QueryResult<GetGroupQuery, GetGroupQueryVariables>;
+export const GetGroupsDocument = gql`
+    query GetGroups {
+  getGroups {
+    ...GroupFragment
+    users {
+      ...RegularUser
+    }
+  }
+}
+    ${GroupFragmentFragmentDoc}
+${RegularUserFragmentDoc}`;
+
+/**
+ * __useGetGroupsQuery__
+ *
+ * To run a query within a React component, call `useGetGroupsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetGroupsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetGroupsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetGroupsQuery(baseOptions?: Apollo.QueryHookOptions<GetGroupsQuery, GetGroupsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetGroupsQuery, GetGroupsQueryVariables>(GetGroupsDocument, options);
+      }
+export function useGetGroupsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetGroupsQuery, GetGroupsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetGroupsQuery, GetGroupsQueryVariables>(GetGroupsDocument, options);
+        }
+export type GetGroupsQueryHookResult = ReturnType<typeof useGetGroupsQuery>;
+export type GetGroupsLazyQueryHookResult = ReturnType<typeof useGetGroupsLazyQuery>;
+export type GetGroupsQueryResult = Apollo.QueryResult<GetGroupsQuery, GetGroupsQueryVariables>;
 export const GetIncomingFriendRequestsDocument = gql`
     query GetIncomingFriendRequests {
   getIncomingFriendRequests {

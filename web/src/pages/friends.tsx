@@ -13,12 +13,14 @@ import { Portal } from "@chakra-ui/portal";
 import { Tooltip } from "@chakra-ui/tooltip";
 import { FriendRequestState } from "@kyle-chat/common";
 import { Form, Formik } from "formik";
+import { useRouter } from "next/router";
 import React, { useState } from "react";
 import { ContextMenuIcon } from "../components/ContextMenuIcon";
 import { InputField } from "../components/InputField";
 import { Layout } from "../components/Layout";
 import { PersonIcon } from "../components/PersonIcon";
 import {
+    useCreateDirectMessageMutation,
     useGetFriendsQuery,
     useGetIncomingFriendRequestsQuery,
     useGetOutgoingFriendRequestsQuery,
@@ -36,6 +38,8 @@ type FriendFetchType = "all" | "pending";
 const Index = () => {
     useIsAuth();
 
+    const router = useRouter();
+
     const meQuery = useMeQuery({ skip: isServer() });
 
     //user specific queries are errored out thanks to typeorm middleware isAuth() and redirected to login page thanks to useIsAuth()
@@ -45,6 +49,7 @@ const Index = () => {
 
     const [sendFriendRequest] = useSendFriendRequestMutation();
     const [setFriendRequestState] = useSetFriendRequestStateMutation();
+    const [createDirectMessage] = useCreateDirectMessageMutation();
 
     const { colorMode } = useColorMode();
     const nav_bgColor = { light: "gray.100", dark: "gray.700" };
@@ -210,14 +215,46 @@ const Index = () => {
                                                                             colorMode
                                                                         ]
                                                                     }
+                                                                    onClick={async () => {
+                                                                        const response = await createDirectMessage(
+                                                                            {
+                                                                                variables: {
+                                                                                    otherId:
+                                                                                        user.id,
+                                                                                },
+                                                                                update: (
+                                                                                    cache
+                                                                                ) => {
+                                                                                    //invalidate all the getGroups queries
+                                                                                    cache.evict(
+                                                                                        {
+                                                                                            id:
+                                                                                                "ROOT_QUERY",
+                                                                                            fieldName:
+                                                                                                "getGroups",
+                                                                                        }
+                                                                                    );
+
+                                                                                    cache.gc();
+                                                                                },
+                                                                            }
+                                                                        );
+
+                                                                        //push them to
+                                                                        router.push(
+                                                                            "/groups/" +
+                                                                                response
+                                                                                    .data
+                                                                                    .createDirectMessage
+                                                                                    .group
+                                                                                    .id
+                                                                        );
+                                                                    }}
                                                                 >
                                                                     Message{" "}
                                                                     {
                                                                         user.username
-                                                                    }{" "}
-                                                                    (does
-                                                                    nothing
-                                                                    right now)
+                                                                    }
                                                                 </Button>
                                                                 <Button
                                                                     borderSize="0"

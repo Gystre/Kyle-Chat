@@ -50,11 +50,11 @@ export class Friend extends BaseEntity {
 
     //these are one directional relationships cuz don't need to query friends on the User side
     //nullable cuz only one or the other will exist when fetching friends (all of them, outgoing, and incoming)
-    @ManyToOne(() => User, { nullable: true })
-    smallerIdUser: User | null;
+    @ManyToOne(() => User)
+    smallerIdUser: User;
 
-    @ManyToOne(() => User, { nullable: true })
-    biggerIdUser: User | null;
+    @ManyToOne(() => User)
+    biggerIdUser: User;
 
     @Field(() => String)
     @CreateDateColumn()

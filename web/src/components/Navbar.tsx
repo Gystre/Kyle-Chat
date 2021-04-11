@@ -1,10 +1,11 @@
-import { Box, Button, Flex, Heading, Link } from "@chakra-ui/core";
 import React from "react";
 import NextLink from "next/link";
 import { useLogoutMutation, useMeQuery } from "../generated/graphql";
 import { isServer } from "../utils/isServer";
 import { useApolloClient } from "@apollo/client";
 import { DarkModeSwitch } from "./DarkModeSwitch";
+import { Box, Flex, Heading, Link } from "@chakra-ui/layout";
+import { Button } from "@chakra-ui/button";
 
 interface Props {}
 export const Navbar: React.FC<Props> = () => {

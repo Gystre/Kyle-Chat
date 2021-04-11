@@ -64,7 +64,7 @@ yarn add typeorm
 
 yarn add @apollo/client
 
-yarn add @chakra-ui/core
+yarn add @chakra-ui/react
 
 yarn add @emotion/core
 

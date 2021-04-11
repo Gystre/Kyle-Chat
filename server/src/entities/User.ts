@@ -29,8 +29,12 @@ export class User extends BaseEntity {
     @Column()
     password!: string;
 
+    @Field()
+    @Column()
+    imageUrl!: string;
+
     //the groups that the user is apart of
-    @ManyToMany(() => Group, (group) => group.users)
+    @ManyToMany(() => Group, (group) => group.users, { onDelete: "CASCADE" }) //delete the group entry if a group is deleted
     groups: Group[];
 
     @Field(() => String)

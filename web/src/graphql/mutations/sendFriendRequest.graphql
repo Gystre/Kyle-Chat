@@ -4,8 +4,7 @@ mutation SendFriendRequest($otherId: Int!) {
             ...FriendFragment
         }
         errors {
-            field
-            message
+            ...RegularError
         }
     }
 }

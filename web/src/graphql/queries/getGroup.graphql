@@ -1,0 +1,15 @@
+query GetGroup($groupId: Int!) {
+    getGroup(groupId: $groupId) {
+        group {
+            ...GroupFragment
+
+            users {
+                ...RegularUser
+            }
+        }
+
+        errors {
+            ...RegularError
+        }
+    }
+}

@@ -1,13 +1,12 @@
-import { Field, Int, ObjectType } from "type-graphql";
+import { GroupType } from "@kyle-chat/common";
+import { Field, ObjectType } from "type-graphql";
 import {
     BaseEntity,
     Column,
     CreateDateColumn,
     Entity,
-    JoinColumn,
     JoinTable,
     ManyToMany,
-    OneToOne,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from "typeorm";
@@ -17,8 +16,8 @@ import { User } from "./User";
 This object serves as a high level abstraction to represent a group of users.
 Each entry in this table will be unique in id and signify a "group"
 
-dm name: dm_userId1_userId2 (userId1 and userId2 in no particular order)
-group name: custom set
+dm name: dm_smallerId_biggerId
+group name: something random the client will choose
 
 TODO:
 if i ever add the feature to delete a group, need the ability to cascade delete entries from the membership table
@@ -33,20 +32,25 @@ export class Group extends BaseEntity {
     id!: number;
 
     @Field()
+    @Column({ type: "int" })
+    type!: GroupType;
+
+    @Field()
     @Column({ length: 100 })
     name!: string;
 
-    //should also keep track of the creator of the group to show who made it
-    @Field(() => Int)
+    //32x32 image that will be used as the group's profile picture
+    //these should be null to save on db size if it's a dm, eh figure out for next iteration of this stack
+    @Field()
     @Column()
+    imageUrl!: string;
+
+    //should also keep track of the creator of the group to show who made it
+    @Field()
+    @Column({ type: "int" })
     creatorId!: number;
 
-    //foreign key to query back
-    @OneToOne(() => User)
-    @JoinColumn()
-    creator!: User;
-
-    //store all the users associated with the group
+    //store all the users associated with the group (includes creator of group)
     //jointable is here b/c this is the side that I will be querying
     //need a way to add to this to add/remove a user from a group
     @ManyToMany(() => User, (user) => user.groups)

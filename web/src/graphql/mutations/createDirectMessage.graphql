@@ -1,0 +1,11 @@
+mutation CreateDirectMessage($otherId: Int!) {
+    createDirectMessage(otherId: $otherId) {
+        group {
+            ...GroupFragment
+        }
+
+        errors {
+            ...RegularError
+        }
+    }
+}

@@ -1,11 +1,14 @@
 import { useColorMode } from "@chakra-ui/color-mode";
-import { Box, Link } from "@chakra-ui/layout";
-import { Grid, Button, Icon } from "@chakra-ui/react";
+import { Box, Flex, Link, Stack, Text } from "@chakra-ui/layout";
+import { Grid, Avatar, CloseButton } from "@chakra-ui/react";
 import React from "react";
 import { Navbar } from "./Navbar";
 import NextLink from "next/link";
 import { PersonIcon } from "./PersonIcon";
 import { ChatIcon } from "@chakra-ui/icons";
+import { useGetGroupsQuery, useMeQuery, User } from "../generated/graphql";
+import { GroupType } from "@kyle-chat/common";
+import { AvatarDisplay } from "./AvatarDisplay";
 
 /*
 Any children we pass into this component will be placed into the right side of the 
@@ -18,6 +21,9 @@ export const Layout: React.FC<Props> = ({ children }) => {
     const leftColumn_bgColor = { light: "gray.200", dark: "gray.800" };
     const rightColumn_bgColor = { light: "gray.50", dark: "gray.600" };
     const color = { light: "black", dark: "white" };
+
+    const { data, loading } = useGetGroupsQuery();
+    const meQuery = useMeQuery();
 
     return (
         <>
@@ -56,9 +62,57 @@ export const Layout: React.FC<Props> = ({ children }) => {
                             </Box>
                         </Link>
                     </NextLink>
-                    <Box fontSize="small" mt="5" ml="6">
+                    <Box fontSize="small" mt={5} ml={6} mb={2}>
                         <b style={{ letterSpacing: "1px" }}>DIRECT MESSAGES</b>
+
                         {/* below here will be a list of users that are fetched when the page is loaded */}
+                        {loading || meQuery.loading ? (
+                            <div>loading groups...</div>
+                        ) : (
+                            <Stack spacing={2}>
+                                {data.getGroups.map((group) => {
+                                    //for dms, grab the other user
+                                    let otherUser: Partial<User> | null = null;
+
+                                    if (group.type == GroupType.DM) {
+                                        //this is a horrible band aid but i don't feel like writing more back end code...
+                                        //we have no way of knowing which user is the other guy from the request so we have to do a little if statement magic :D
+                                        //dm_1_2 <---- substringing that
+                                        const smallerId = group.name.substring(
+                                            3,
+                                            4
+                                        );
+                                        otherUser =
+                                            meQuery.data.me.id !=
+                                            parseInt(smallerId)
+                                                ? group.users[0]
+                                                : group.users[1];
+                                    }
+
+                                    return (
+                                        <NextLink href={"/groups/" + group.id}>
+                                            <Link>
+                                                <AvatarDisplay
+                                                    imageUrl={
+                                                        group.type ==
+                                                        GroupType.DM
+                                                            ? otherUser.imageUrl
+                                                            : group.imageUrl
+                                                    }
+                                                    name={
+                                                        group.type ==
+                                                        GroupType.DM
+                                                            ? otherUser.username
+                                                            : group.name
+                                                    }
+                                                    closeButton
+                                                />
+                                            </Link>
+                                        </NextLink>
+                                    );
+                                })}
+                            </Stack>
+                        )}
                     </Box>
                 </Box>
                 <Box

@@ -51,7 +51,7 @@ export class FriendResolver {
     async getOutgoingFriendRequests(
         @Ctx() { req }: MyContext
     ): Promise<Friend[]> {
-        const users = await getConnection()
+        return await getConnection()
             .getRepository(Friend)
             .createQueryBuilder("friend")
             .where(
@@ -63,8 +63,6 @@ export class FriendResolver {
             )
             .orderBy('friend."createdAt"', "DESC")
             .getMany();
-
-        return users;
     }
 
     //get requests OTHER people have sent to YOU
@@ -73,7 +71,7 @@ export class FriendResolver {
     async getIncomingFriendRequests(
         @Ctx() { req }: MyContext
     ): Promise<Friend[]> {
-        const users = await getConnection()
+        return await getConnection()
             .getRepository(Friend)
             .createQueryBuilder("friend")
             .where(
@@ -85,8 +83,6 @@ export class FriendResolver {
             )
             .orderBy('friend."createdAt"', "DESC")
             .getMany();
-
-        return users;
     }
 
     //get friends that have ACCEPTED your request
@@ -94,7 +90,7 @@ export class FriendResolver {
     @Query(() => [Friend])
     async getFriends(@Ctx() { req }: MyContext): Promise<Friend[]> {
         //fetches both relationships somehow, probably cuz of the resolvers
-        const users = await getConnection()
+        return await getConnection()
             .getRepository(Friend)
             .createQueryBuilder("friend")
             .where(
@@ -106,8 +102,6 @@ export class FriendResolver {
             )
             .orderBy('friend."createdAt"', "DESC")
             .getMany();
-
-        return users;
     }
 
     @Mutation(() => FriendResponse)

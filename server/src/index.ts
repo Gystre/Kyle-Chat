@@ -35,7 +35,9 @@ const main = async () => {
     // await connection.runMigrations();
 
     //if you need to delete stuff in table
-    // await Comment.delete({});
+    // await Friend.delete({});
+    // await User.delete({});
+    // await Group.delete({});
 
     //create an instance of express
     const app = express();

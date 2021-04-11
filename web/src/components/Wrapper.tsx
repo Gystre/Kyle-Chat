@@ -1,4 +1,4 @@
-import { Box } from "@chakra-ui/core";
+import { Box } from "@chakra-ui/layout";
 import React from "react";
 
 //creating a type here b/c we're reusing this in Layout
