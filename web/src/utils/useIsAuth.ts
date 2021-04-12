@@ -10,8 +10,9 @@ export const useIsAuth = () => {
 
     useEffect(() => {
         if (!loading && !data?.me) {
-            //pass the page they were on to the query object
-            router.replace("/login?next=" + router.pathname);
+            //just redirecting them back to the homepage and not the page they were last on cuz this is a chat messaging application
+            //not social media so need to go back to the page they were on cuz 99% of the time the user doesn't have access to it
+            router.replace("/login?next=/");
         }
     }, [loading, data, router]);
 };

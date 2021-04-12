@@ -9,6 +9,7 @@ import { ChatIcon } from "@chakra-ui/icons";
 import { useGetGroupsQuery, useMeQuery, User } from "../generated/graphql";
 import { GroupType } from "@kyle-chat/common";
 import { AvatarDisplay } from "./AvatarDisplay";
+import { useIsAuth } from "../utils/useIsAuth";
 
 /*
 Any children we pass into this component will be placed into the right side of the 
@@ -17,6 +18,8 @@ two column layout we have
 
 interface Props {}
 export const Layout: React.FC<Props> = ({ children }) => {
+    useIsAuth();
+
     const { colorMode } = useColorMode();
     const leftColumn_bgColor = { light: "gray.200", dark: "gray.800" };
     const rightColumn_bgColor = { light: "gray.50", dark: "gray.600" };
@@ -24,6 +27,46 @@ export const Layout: React.FC<Props> = ({ children }) => {
 
     const { data, loading } = useGetGroupsQuery();
     const meQuery = useMeQuery();
+
+    let groups = null;
+
+    if (!meQuery.loading && meQuery?.data.me) {
+        groups = data?.getGroups.map((group) => {
+            //for dms, grab the other user
+            let otherUser: Partial<User> | null = null;
+
+            if (group.type == GroupType.DM) {
+                //this is a horrible band aid but i don't feel like writing more back end code...
+                //we have no way of knowing which user is the other guy from the request so we have to do a little if statement magic :D
+                //dm_1_2 <---- substringing that
+                const smallerId = group.name.substring(3, 4);
+                otherUser =
+                    meQuery.data.me.id != parseInt(smallerId)
+                        ? group.users[0]
+                        : group.users[1];
+            }
+
+            return (
+                <NextLink key={group.id} href={"/groups/" + group.id}>
+                    <Link>
+                        <AvatarDisplay
+                            imageUrl={
+                                group.type == GroupType.DM
+                                    ? otherUser.imageUrl
+                                    : group.imageUrl
+                            }
+                            name={
+                                group.type == GroupType.DM
+                                    ? otherUser.username
+                                    : group.name
+                            }
+                            closeButton
+                        />
+                    </Link>
+                </NextLink>
+            );
+        });
+    }
 
     return (
         <>
@@ -66,52 +109,10 @@ export const Layout: React.FC<Props> = ({ children }) => {
                         <b style={{ letterSpacing: "1px" }}>DIRECT MESSAGES</b>
 
                         {/* below here will be a list of users that are fetched when the page is loaded */}
-                        {loading || meQuery.loading ? (
+                        {!data && loading ? (
                             <div>loading groups...</div>
                         ) : (
-                            <Stack spacing={2}>
-                                {data.getGroups.map((group) => {
-                                    //for dms, grab the other user
-                                    let otherUser: Partial<User> | null = null;
-
-                                    if (group.type == GroupType.DM) {
-                                        //this is a horrible band aid but i don't feel like writing more back end code...
-                                        //we have no way of knowing which user is the other guy from the request so we have to do a little if statement magic :D
-                                        //dm_1_2 <---- substringing that
-                                        const smallerId = group.name.substring(
-                                            3,
-                                            4
-                                        );
-                                        otherUser =
-                                            meQuery.data.me.id !=
-                                            parseInt(smallerId)
-                                                ? group.users[0]
-                                                : group.users[1];
-                                    }
-
-                                    return (
-                                        <NextLink href={"/groups/" + group.id}>
-                                            <Link>
-                                                <AvatarDisplay
-                                                    imageUrl={
-                                                        group.type ==
-                                                        GroupType.DM
-                                                            ? otherUser.imageUrl
-                                                            : group.imageUrl
-                                                    }
-                                                    name={
-                                                        group.type ==
-                                                        GroupType.DM
-                                                            ? otherUser.username
-                                                            : group.name
-                                                    }
-                                                    closeButton
-                                                />
-                                            </Link>
-                                        </NextLink>
-                                    );
-                                })}
-                            </Stack>
+                            <Stack spacing={2}>{groups}</Stack>
                         )}
                     </Box>
                 </Box>

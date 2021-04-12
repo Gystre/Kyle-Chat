@@ -13,5 +13,6 @@ const createClient = (ctx: NextPageContext) =>
                     : undefined) || "", //only pass cookie if not on server
         },
         cache: new InMemoryCache(),
+        connectToDevTools: process.env.NODE_ENV === "development",
     });
 export const withApollo = createWithApollo(createClient);

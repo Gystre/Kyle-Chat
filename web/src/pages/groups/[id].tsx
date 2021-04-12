@@ -1,15 +1,17 @@
-import { Layout } from "../../components/Layout";
-import { withApollo } from "../../utils/withApollo";
-import { useGetGroupFromUrl } from "../../utils/useGetGroupFromUrl";
-import { GroupType } from "@kyle-chat/common";
-import { RichTextEditor } from "../../components/RichTextEditor";
-import { useState } from "react";
-import { Descendant, Element } from "slate";
-import { Box, Grid, Stack } from "@chakra-ui/layout";
 import { useColorMode } from "@chakra-ui/color-mode";
+import { Box, Grid, Stack } from "@chakra-ui/layout";
+import { useState } from "react";
+import { Descendant } from "slate";
 import { AvatarDisplay } from "../../components/AvatarDisplay";
+import { Layout } from "../../components/Layout";
+import { RichTextEditor } from "../../components/RichTextEditor";
+import { useGetGroupFromUrl } from "../../utils/useGetGroupFromUrl";
+import { useIsAuth } from "../../utils/useIsAuth";
+import { withApollo } from "../../utils/withApollo";
 
 const Group = () => {
+    useIsAuth();
+
     const { colorMode } = useColorMode();
     const friendColumn_bgColor = { light: "gray.200", dark: "gray.800" };
 
@@ -64,7 +66,7 @@ const Group = () => {
                     <Box ml={6} mt={2}>
                         <b style={{ letterSpacing: "1px" }}>MEMBERS</b>
                         <Stack mt={2} spacing={2}>
-                            {data.getGroup.group.users.map((user) => (
+                            {data?.getGroup.group.users.map((user) => (
                                 <AvatarDisplay
                                     imageUrl={user.imageUrl}
                                     name={user.username}

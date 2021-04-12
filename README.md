@@ -5,6 +5,7 @@ This full stack application will allow users to sign in, add friends, and chat i
 ## Todo
 
 -   use await Promise.all for error checking on backend (https://github.com/benawad/slack-clone-server/blob/f86d853d1aab82a82ec6a2eb2a81455bebd56039/resolvers/team.js#L31)
+-   ability to create a group
 -   real time messaging
 -   scalable send message flow with rate limit of 5 messages per second or something like that
 -   upload images and files and display them in the chat
@@ -21,3 +22,4 @@ This full stack application will allow users to sign in, add friends, and chat i
 
 -   emoji selector
 -   use storybook and figma to work out the components so that the ui is nice
+-   use skeleton component from chakra as filler groups while waiting for queries to load

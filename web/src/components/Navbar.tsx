@@ -1,4 +1,3 @@
-import React from "react";
 import NextLink from "next/link";
 import { useLogoutMutation, useMeQuery } from "../generated/graphql";
 import { isServer } from "../utils/isServer";
@@ -7,8 +6,7 @@ import { DarkModeSwitch } from "./DarkModeSwitch";
 import { Box, Flex, Heading, Link } from "@chakra-ui/layout";
 import { Button } from "@chakra-ui/button";
 
-interface Props {}
-export const Navbar: React.FC<Props> = () => {
+export const Navbar = () => {
     const [logout, { loading: logoutFetching }] = useLogoutMutation();
     const apolloClient = useApolloClient();
     const { data, loading } = useMeQuery({ skip: isServer() });

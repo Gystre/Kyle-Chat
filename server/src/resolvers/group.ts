@@ -34,6 +34,10 @@ export class GroupResolver {
             userIds.push(group.users[i].id);
         }
 
+        //need a sort here to ensure that the ids come in order
+        //would be able to avoid this if i structured the data better so i can get the other person for dms:/
+        userIds.sort();
+
         return userLoader.loadMany(userIds);
     }
 
@@ -71,6 +75,7 @@ export class GroupResolver {
             .createQueryBuilder("group")
             .leftJoinAndSelect("group.users", "user")
             .where("group.id IN (:...groupIds)", { groupIds })
+            .orderBy("group.updatedAt", "DESC")
             .getMany();
     }
 
