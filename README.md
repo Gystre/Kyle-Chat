@@ -9,6 +9,8 @@ This full stack application will allow users to sign in, add friends, and chat i
 -   real time messaging
 -   scalable send message flow with rate limit of 5 messages per second or something like that
 -   upload images and files and display them in the chat
+-   make login & register page a little nicer and not just two input fields and a button
+-   read ability to forget password
 
 ## Done
 
@@ -23,3 +25,4 @@ This full stack application will allow users to sign in, add friends, and chat i
 -   emoji selector
 -   use storybook and figma to work out the components so that the ui is nice
 -   use skeleton component from chakra as filler groups while waiting for queries to load
+-   mention other messages

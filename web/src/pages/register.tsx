@@ -5,12 +5,11 @@ import React from "react";
 import { InputField } from "../components/InputField";
 import { Wrapper } from "../components/Wrapper";
 import { useRegisterMutation, MeQuery, MeDocument } from "../generated/graphql";
+import socket from "../utils/socket";
 import { toErrorMap } from "../utils/toErrorMap";
 import { withApollo } from "../utils/withApollo";
 
-interface Props {}
-
-export const Register: React.FC<Props> = () => {
+const Register = () => {
     //used to redirect user
     const router = useRouter();
     const [register] = useRegisterMutation();
@@ -39,6 +38,8 @@ export const Register: React.FC<Props> = () => {
                         //transform the returned message error array into a map that formik understands
                         setErrors(toErrorMap(response.data.register.errors));
                     } else if (response.data?.register.user) {
+                        socket.connect();
+
                         //worked, redirect them to homepage
                         router.push("/");
                     }

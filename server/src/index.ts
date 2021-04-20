@@ -2,7 +2,7 @@ import { ApolloServer } from "apollo-server-express";
 import connectRedis from "connect-redis";
 import cors from "cors";
 import "dotenv-safe/config"; //takes vars in .env and makes them environment variables
-import express from "express";
+import express, { NextFunction } from "express";
 import session from "express-session";
 import Redis from "ioredis";
 import path from "path";
@@ -13,11 +13,14 @@ import { createConnection } from "typeorm";
 import { COOKIE_NAME, __prod__ } from "./constants";
 import { Friend } from "./entities/Friend";
 import { Group } from "./entities/Group";
+import { Message } from "./entities/Message";
 import { User } from "./entities/User";
 import { FriendResolver } from "./resolvers/friend";
 import { GroupResolver } from "./resolvers/group";
 import { HelloResolver } from "./resolvers/hello";
+import { MessageResolver } from "./resolvers/message";
 import { UserResolver } from "./resolvers/user";
+import { createGroupLoader } from "./utils/createGroupLoader";
 import { createUserLoader } from "./utils/createUserLoader";
 
 const main = async () => {
@@ -28,7 +31,7 @@ const main = async () => {
         logging: true,
         // synchronize: true, //create the tables automatically without running a migration (good for development)
         migrations: [path.join(__dirname, "./migrations/*")],
-        entities: [User, Friend, Group], //MAKE SURE TO ADD ANY NEW ENTITIES HERE
+        entities: [User, Friend, Group, Message], //MAKE SURE TO ADD ANY NEW ENTITIES HERE
     });
 
     //run the migrations inside the migrations folder
@@ -59,26 +62,27 @@ const main = async () => {
         })
     );
 
-    app.use(
-        session({
-            name: COOKIE_NAME,
-            store: new RedisStore({
-                client: redis,
-                disableTTL: true,
-                disableTouch: true, //disables lifecylce of cookies so they last forever
-            }),
-            cookie: {
-                maxAge: 1000 * 60 * 60 * 24 * 365 * 10, //10 years
-                httpOnly: true, //make sure cookie only available on serverside
-                sameSite: "lax", //protect csrf
-                secure: __prod__, //cookie only works in https
-                domain: __prod__ ? ".kylegodly.com" : undefined, //need to add domain b/c sometimes server doesn't always forward cookie correctly
-            },
-            saveUninitialized: false,
-            secret: process.env.SESSION_SECRET,
-            resave: false, //makes sure not continuing to ping redis
-        })
-    );
+    //create the express session
+    const sessionMiddleware = session({
+        name: COOKIE_NAME,
+        store: new RedisStore({
+            client: redis,
+            disableTTL: true,
+            disableTouch: true, //disables lifecylce of cookies so they last forever
+        }),
+        cookie: {
+            maxAge: 1000 * 60 * 60 * 24 * 365 * 10, //10 years
+            httpOnly: true, //make sure cookie only available on serverside
+            sameSite: "lax", //protect csrf
+            secure: __prod__, //cookie only works in https
+            domain: __prod__ ? ".kylegodly.com" : undefined, //need to add domain b/c sometimes server doesn't always forward cookie correctly
+        },
+        saveUninitialized: false,
+        secret: process.env.SESSION_SECRET,
+        resave: false, //makes sure not continuing to ping redis
+    });
+
+    app.use(sessionMiddleware);
 
     const apolloServer = new ApolloServer({
         schema: await buildSchema({
@@ -87,6 +91,7 @@ const main = async () => {
                 UserResolver,
                 FriendResolver,
                 GroupResolver,
+                MessageResolver,
             ],
             validate: false,
         }),
@@ -98,6 +103,7 @@ const main = async () => {
             redis,
             // these are batch processors that take multiple small sql statements and process them into one big one
             userLoader: createUserLoader(), //a new userLoader will be created on every request
+            groupLoader: createGroupLoader(),
         }),
     });
 
@@ -112,10 +118,19 @@ const main = async () => {
         console.log("server started on localhost:4000");
     });
 
+    // app.get("/", (req, res) => {
+    //     console.log("req: ", req);
+    //     console.log("res: ", res);
+    // });
+
     //now do socket io stuff
     const io = require("socket.io")(httpServer, {
         cors: true,
         origins: [process.env.CORS_ORIGIN],
+    });
+
+    io.use(function (socket: Socket, next: NextFunction) {
+        sessionMiddleware(socket.request, socket.request.res || {}, next);
     });
 
     io.on("connection", function (socket: Socket) {

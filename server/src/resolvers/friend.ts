@@ -85,23 +85,29 @@ export class FriendResolver {
             .getMany();
     }
 
-    //get friends that have ACCEPTED your request
-    @UseMiddleware(isAuth)
-    @Query(() => [Friend])
-    async getFriends(@Ctx() { req }: MyContext): Promise<Friend[]> {
-        //fetches both relationships somehow, probably cuz of the resolvers
+    //used to get the friends of a user
+    //abstracted cuz need to resuse this logic in the group resolver
+    static async getFriendsAsObject(userId: number): Promise<Friend[]> {
         return await getConnection()
             .getRepository(Friend)
             .createQueryBuilder("friend")
             .where(
                 "(friend.smallerUserId = :userId or friend.biggerUserId = :userId) and friend.state = :state",
                 {
-                    userId: req.session.userId,
+                    userId,
                     state: FriendRequestState.Accepted,
                 }
             )
             .orderBy('friend."createdAt"', "DESC")
             .getMany();
+    }
+
+    //get friends that have ACCEPTED your request
+    @UseMiddleware(isAuth)
+    @Query(() => [Friend])
+    async getFriends(@Ctx() { req }: MyContext): Promise<Friend[]> {
+        //fetches both relationships somehow, probably cuz of the resolvers
+        return await FriendResolver.getFriendsAsObject(req.session.userId);
     }
 
     @Mutation(() => FriendResponse)

@@ -7,9 +7,11 @@ import {
     Entity,
     JoinTable,
     ManyToMany,
+    OneToMany,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from "typeorm";
+import { Message } from "./Message";
 import { User } from "./User";
 
 /*
@@ -56,6 +58,9 @@ export class Group extends BaseEntity {
     @ManyToMany(() => User, (user) => user.groups)
     @JoinTable()
     users: User[];
+
+    @OneToMany(() => Message, (message) => message.group)
+    messages: Message[];
 
     @Field(() => String)
     @CreateDateColumn()

@@ -23,11 +23,11 @@ export class UserResolver {
     //make sure other users can't see other people's emails
     @FieldResolver(() => String)
     email(@Root() user: User, @Ctx() { req }: MyContext) {
-        //this is current user and its ok to show their own email
+        //make sure user can only see their email and not anyone else's
         if (req.session.userId === user.id) {
             return user.email;
         }
-        //current user wants to see someone elses email
+
         return "";
     }
 

@@ -1,4 +1,4 @@
-import { FriendRequestState, GroupType } from "@kyle-chat/common";
+import { GroupType } from "@kyle-chat/common";
 import {
     Arg,
     Ctx,
@@ -11,11 +11,11 @@ import {
     UseMiddleware,
 } from "type-graphql";
 import { getConnection } from "typeorm";
-import { Friend } from "../entities/Friend";
 import { Group } from "../entities/Group";
 import { User } from "../entities/User";
 import { isAuth } from "../middleware/isAuth";
 import { MyContext } from "../types";
+import { FriendResolver } from "./friend";
 import { GroupResponse } from "./responses/GroupResponse";
 
 @Resolver(Group)
@@ -79,13 +79,16 @@ export class GroupResolver {
             .getMany();
     }
 
-    //get details about a group, checking if the logged in user is apart of the group is currently O(n) but I feel like it could be O(1), just not sure how...
-    @Query(() => GroupResponse)
-    @UseMiddleware(isAuth)
-    async getGroup(
-        @Arg("groupId", () => Int) groupId: number,
-        @Ctx() { req }: MyContext
-    ): Promise<GroupResponse> {
+    //use this function to check if a user is in a group
+    //function will give you access to the the error response, found group, and whether or not it found the user in there
+    static async isUserInGroup(
+        userId: number,
+        groupId: number
+    ): Promise<{
+        group?: Group;
+        resp_groupDNE?: GroupResponse;
+        found?: boolean;
+    }> {
         const res = await getConnection()
             .getRepository(Group)
             .createQueryBuilder("group")
@@ -98,13 +101,15 @@ export class GroupResolver {
         //the group of the id doesn't exist
         if (res.length == 0) {
             return {
-                errors: [
-                    {
-                        field: "other",
-                        message:
-                            "there is no group by that id that exists you dumbass",
-                    },
-                ],
+                resp_groupDNE: {
+                    errors: [
+                        {
+                            field: "other",
+                            message:
+                                "there is no group by that id that exists you dumbass",
+                        },
+                    ],
+                },
             };
         }
 
@@ -113,10 +118,34 @@ export class GroupResolver {
 
         var found = false;
         for (var i = 0; i < users.length; i++) {
-            if (users[i].id == req.session.userId) found = true;
+            if (users[i].id == userId) {
+                found = true;
+                break;
+            }
         }
 
-        if (!found) {
+        return { found, group: res[0] };
+    }
+
+    //get details about a group, checking if the logged in user is apart of the group is currently O(n) but I feel like it could be O(1), just not sure how...
+    @Query(() => GroupResponse)
+    @UseMiddleware(isAuth)
+    async getGroup(
+        @Arg("groupId", () => Int) groupId: number,
+        @Ctx() { req }: MyContext
+    ): Promise<GroupResponse> {
+        const result = await GroupResolver.isUserInGroup(
+            req.session.userId,
+            groupId
+        );
+
+        //see if group even exists
+        if (result.resp_groupDNE) {
+            return result.resp_groupDNE;
+        }
+
+        //see if user is apart of the group
+        if (!result.found) {
             return {
                 errors: [
                     {
@@ -128,7 +157,7 @@ export class GroupResolver {
             };
         }
 
-        return { group: res[0] };
+        return { group: result.group };
     }
 
     //generic createGroup that will be used to create group dms, large chat rooms, and dm group
@@ -169,18 +198,9 @@ export class GroupResolver {
 
         //query the creator's friends to make sure that all the ids match, no more and no less
         //TODO: find some way to reuse the logic from the friend resolver?
-        const creatorFriends = await getConnection()
-            .getRepository(Friend)
-            .createQueryBuilder("friend")
-            .where(
-                "(friend.smallerUserId = :userId or friend.biggerUserId = :userId) and friend.state = :state",
-                {
-                    userId: req.session.userId,
-                    state: FriendRequestState.Accepted,
-                }
-            )
-            .orderBy('friend."createdAt"', "DESC")
-            .getMany();
+        const creatorFriends = await FriendResolver.getFriendsAsObject(
+            req.session.userId
+        );
 
         //need to get the users that aren't the logged in guy from the creatorFriends array
         var friendUsers: number[] = [];

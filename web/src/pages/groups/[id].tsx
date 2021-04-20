@@ -1,5 +1,8 @@
+import { Button } from "@chakra-ui/button";
 import { useColorMode } from "@chakra-ui/color-mode";
 import { Box, Grid, Stack } from "@chakra-ui/layout";
+import { slateObjectCharacterLength } from "@kyle-chat/common";
+import { Form, Formik } from "formik";
 import { useState } from "react";
 import { Descendant } from "slate";
 import { AvatarDisplay } from "../../components/AvatarDisplay";
@@ -47,17 +50,37 @@ const Group = () => {
                 {/* messages and area to type */}
                 <Grid templateRows="80% 20%">
                     <Box>yeah</Box>
-                    <Box
-                        p={1}
-                        m={1}
-                        border="1px solid #ccc"
-                        borderRadius="16px"
-                    >
-                        <RichTextEditor
-                            textBody={messageBody}
-                            setTextBodyValue={setMessageBody}
-                            placeholder="type something... :DDDD"
-                        />
+                    <Box>
+                        <Formik
+                            initialValues={{}}
+                            onSubmit={async (values) =>
+                                console.log(JSON.stringify(messageBody))
+                            }
+                        >
+                            {({ isSubmitting }) => (
+                                <Form>
+                                    <Box
+                                        p={1}
+                                        m={1}
+                                        border="1px solid #ccc"
+                                        borderRadius="16px"
+                                    >
+                                        <RichTextEditor
+                                            textBody={messageBody}
+                                            setTextBodyValue={setMessageBody}
+                                            placeholder="type something... :DDDD"
+                                        />
+                                    </Box>
+                                    <Button
+                                        type="submit"
+                                        isLoading={isSubmitting}
+                                        variantColor="green"
+                                    >
+                                        submit
+                                    </Button>
+                                </Form>
+                            )}
+                        </Formik>
                     </Box>
                 </Grid>
 

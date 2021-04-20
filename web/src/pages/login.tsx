@@ -8,10 +8,9 @@ import { MeDocument, MeQuery, useLoginMutation } from "../generated/graphql";
 import { toErrorMap } from "../utils/toErrorMap";
 import { withApollo } from "../utils/withApollo";
 import NextLink from "next/link";
+import socket from "../utils/socket";
 
-interface Props {}
-
-export const Login: React.FC<{}> = () => {
+const Login = () => {
     //used to redirect user
     const router = useRouter();
     const [login] = useLoginMutation();
@@ -39,6 +38,8 @@ export const Login: React.FC<{}> = () => {
                         //transform the returned message error array into a map that formik understands
                         setErrors(toErrorMap(response.data.login.errors));
                     } else if (response.data?.login.user) {
+                        socket.connect();
+
                         if (typeof router.query.next === "string") {
                             //worked, redirec them to the page they were on
                             router.push(router.query.next);

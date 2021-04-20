@@ -16,7 +16,16 @@ export const validateRegister = (options: UsernamePasswordInput) => {
         return [
             {
                 field: "username",
-                message: "length must be greater than 2",
+                message: "length must be greater than 2 characters",
+            },
+        ];
+    }
+
+    if (options.username.length > 30) {
+        return [
+            {
+                field: "username",
+                message: "length can't be longer than 30 characters",
             },
         ];
     }
