@@ -1,11 +1,12 @@
 import { Button } from "@chakra-ui/button";
 import { useColorMode } from "@chakra-ui/color-mode";
 import { Box, Grid, Stack } from "@chakra-ui/layout";
-import { slateObjectCharacterLength } from "@kyle-chat/common";
+import { GroupType } from "@kyle-chat/common";
 import { Form, Formik } from "formik";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { Descendant } from "slate";
 import { AvatarDisplay } from "../../components/AvatarDisplay";
+import { GroupIcon } from "../../components/GroupIcon";
 import { Layout } from "../../components/Layout";
 import { RichTextEditor } from "../../components/RichTextEditor";
 import { socket } from "../../utils/socket";
@@ -18,6 +19,7 @@ const Group = () => {
 
     const { colorMode } = useColorMode();
     const friendColumn_bgColor = { light: "gray.200", dark: "gray.800" };
+    const title_bgColor = { light: "gray.100", dark: "gray.700" };
 
     const { data, error, loading } = useGetGroupFromUrl();
 
@@ -49,7 +51,22 @@ const Group = () => {
         <Layout>
             <Grid height="100vh" gridTemplateColumns="80% 20%">
                 {/* messages and area to type */}
-                <Grid templateRows="80% 20%">
+                {/* group dms get a little title bar at the top */}
+                <Grid
+                    templateRows={
+                        data.getGroup.group.type == GroupType.GroupDM
+                            ? "5% 75% 20%"
+                            : "80% 20%"
+                    }
+                >
+                    {data.getGroup.group.type == GroupType.GroupDM ? (
+                        <Box bgColor={title_bgColor[colorMode]}>
+                            <Box mt={2} ml={3}>
+                                <GroupIcon />
+                                <b>{data.getGroup.group.name}</b>
+                            </Box>
+                        </Box>
+                    ) : null}
                     <Box>yeah</Box>
                     <Box>
                         <Formik
