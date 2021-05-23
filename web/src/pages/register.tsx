@@ -1,11 +1,11 @@
 import { Box, Button } from "@chakra-ui/react";
 import { Form, Formik } from "formik";
 import { useRouter } from "next/router";
-import React from "react";
+import { useContext } from "react";
 import { InputField } from "../components/InputField";
 import { Wrapper } from "../components/Wrapper";
 import { useRegisterMutation, MeQuery, MeDocument } from "../generated/graphql";
-import socket from "../utils/socket";
+import { socket } from "../utils/socket";
 import { toErrorMap } from "../utils/toErrorMap";
 import { withApollo } from "../utils/withApollo";
 
@@ -13,6 +13,7 @@ const Register = () => {
     //used to redirect user
     const router = useRouter();
     const [register] = useRegisterMutation();
+
     return (
         <Wrapper>
             <Formik

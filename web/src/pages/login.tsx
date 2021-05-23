@@ -1,19 +1,20 @@
 import { Box, Flex, Link, Button } from "@chakra-ui/react";
 import { Formik, Form } from "formik";
 import { useRouter } from "next/router";
-import React from "react";
+import { useContext } from "react";
 import { InputField } from "../components/InputField";
 import { Wrapper } from "../components/Wrapper";
 import { MeDocument, MeQuery, useLoginMutation } from "../generated/graphql";
 import { toErrorMap } from "../utils/toErrorMap";
 import { withApollo } from "../utils/withApollo";
 import NextLink from "next/link";
-import socket from "../utils/socket";
+import { socket } from "../utils/socket";
 
 const Login = () => {
     //used to redirect user
     const router = useRouter();
     const [login] = useLoginMutation();
+
     return (
         <Wrapper>
             <Formik
@@ -38,10 +39,11 @@ const Login = () => {
                         //transform the returned message error array into a map that formik understands
                         setErrors(toErrorMap(response.data.login.errors));
                     } else if (response.data?.login.user) {
+                        //open a socket connection for the logged in user
                         socket.connect();
 
                         if (typeof router.query.next === "string") {
-                            //worked, redirec them to the page they were on
+                            //worked, redirect them to the page they were on
                             router.push(router.query.next);
                         } else {
                             //worked, redirect them to homepage

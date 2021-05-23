@@ -2,12 +2,12 @@ import { ApolloServer } from "apollo-server-express";
 import connectRedis from "connect-redis";
 import cors from "cors";
 import "dotenv-safe/config"; //takes vars in .env and makes them environment variables
-import express, { NextFunction } from "express";
+import express from "express";
 import session from "express-session";
 import Redis from "ioredis";
 import path from "path";
 import "reflect-metadata";
-import { Socket } from "socket.io";
+import { Server, Socket } from "socket.io";
 import { buildSchema } from "type-graphql";
 import { createConnection } from "typeorm";
 import { COOKIE_NAME, __prod__ } from "./constants";
@@ -113,35 +113,51 @@ const main = async () => {
         cors: false,
     });
 
-    //and finally start the server
+    //start the server
     const httpServer = app.listen(parseInt(process.env.PORT), () => {
-        console.log("server started on localhost:4000");
+        console.log("server started on localhost:" + process.env.PORT);
     });
 
-    // app.get("/", (req, res) => {
-    //     console.log("req: ", req);
-    //     console.log("res: ", res);
-    // });
-
-    //now do socket io stuff
-    const io = require("socket.io")(httpServer, {
-        cors: true,
-        origins: [process.env.CORS_ORIGIN],
+    //and also add on the socket io stuff
+    const io = new Server(httpServer, {
+        cookie: true,
+        cors: {
+            origin: process.env.CORS_ORIGIN,
+            methods: ["GET", "POST"],
+            credentials: true,
+        },
     });
 
-    io.use(function (socket: Socket, next: NextFunction) {
-        sessionMiddleware(socket.request, socket.request.res || {}, next);
+    io.use((socket, next) => {
+        //adding the same middleware here allows us to use the same sessionID as the authentication and gives us access to the user id
+        sessionMiddleware(socket.request, {}, next);
     });
 
-    io.on("connection", function (socket: Socket) {
-        console.log("user connected");
+    io.on("connection", async (socket: Socket) => {
+        const sessionId = "sess:" + socket.request.sessionID;
+
+        //check redis for the userId
+        if (!(await redis.exists(sessionId))) {
+            //not authenticated
+            return;
+        }
+
+        const userId = JSON.parse(
+            (await redis.get(sessionId)) as string
+        ).userId;
+
+        console.log("id:", userId, " connected");
+
+        socket.on("test", () => {
+            console.log("recieved the test!");
+        });
 
         socket.on("disconnect", () => {
             console.log("user disconnected");
         });
     });
 
-    console.log("worldddddddd");
+    console.log("Kyle Chat server!!!!!");
 };
 
 main().catch((err) => {

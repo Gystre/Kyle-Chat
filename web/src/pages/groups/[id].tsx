@@ -3,11 +3,12 @@ import { useColorMode } from "@chakra-ui/color-mode";
 import { Box, Grid, Stack } from "@chakra-ui/layout";
 import { slateObjectCharacterLength } from "@kyle-chat/common";
 import { Form, Formik } from "formik";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Descendant } from "slate";
 import { AvatarDisplay } from "../../components/AvatarDisplay";
 import { Layout } from "../../components/Layout";
 import { RichTextEditor } from "../../components/RichTextEditor";
+import { socket } from "../../utils/socket";
 import { useGetGroupFromUrl } from "../../utils/useGetGroupFromUrl";
 import { useIsAuth } from "../../utils/useIsAuth";
 import { withApollo } from "../../utils/withApollo";
@@ -53,9 +54,11 @@ const Group = () => {
                     <Box>
                         <Formik
                             initialValues={{}}
-                            onSubmit={async (values) =>
-                                console.log(JSON.stringify(messageBody))
-                            }
+                            onSubmit={async (values) => {
+                                // console.log(JSON.stringify(messageBody));
+
+                                socket.emit("test", "seomthing");
+                            }}
                         >
                             {({ isSubmitting }) => (
                                 <Form>

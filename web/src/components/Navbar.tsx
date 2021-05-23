@@ -5,7 +5,7 @@ import { useApolloClient } from "@apollo/client";
 import { DarkModeSwitch } from "./DarkModeSwitch";
 import { Box, Flex, Heading, Link } from "@chakra-ui/layout";
 import { Button } from "@chakra-ui/button";
-import socket from "../utils/socket";
+import { socket } from "../utils/socket";
 
 export const Navbar = () => {
     const [logout, { loading: logoutFetching }] = useLogoutMutation();

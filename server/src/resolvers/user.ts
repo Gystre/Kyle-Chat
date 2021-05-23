@@ -142,7 +142,7 @@ export class UserResolver {
             };
         }
 
-        //req.session kind of like a global object that can be accessed from all resolvers
+        //adds a userId field onto the session's cookie
         req.session.userId = user.id;
 
         return { user };
@@ -154,6 +154,7 @@ export class UserResolver {
         //wait for destroy to finsh with a promise
         return new Promise((resolve) =>
             req.session.destroy((err) => {
+                //clear the cookie on the response so the client doesn't have it anymore
                 //destroy the cookie even if we couldn't destroy the session
                 res.clearCookie(COOKIE_NAME);
 

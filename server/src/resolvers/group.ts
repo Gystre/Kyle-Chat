@@ -219,6 +219,8 @@ export class GroupResolver {
         friendUsers.sort();
         otherIds.sort();
 
+        //TODO: do ! contains for maybe more elegant solution???
+
         var friendUsersIndex = 0,
             otherIdsIndex = 0;
         while (

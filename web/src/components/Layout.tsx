@@ -9,7 +9,6 @@ import { ChatIcon } from "@chakra-ui/icons";
 import { useGetGroupsQuery, useMeQuery, User } from "../generated/graphql";
 import { GroupType } from "@kyle-chat/common";
 import { AvatarDisplay } from "./AvatarDisplay";
-import { useIsAuth } from "../utils/useIsAuth";
 
 /*
 Any children we pass into this component will be placed into the right side of the 
@@ -18,8 +17,6 @@ two column layout we have
 
 interface Props {}
 export const Layout: React.FC<Props> = ({ children }) => {
-    useIsAuth();
-
     const { colorMode } = useColorMode();
     const leftColumn_bgColor = { light: "gray.200", dark: "gray.800" };
     const rightColumn_bgColor = { light: "gray.50", dark: "gray.600" };
