@@ -188,7 +188,8 @@ export const createWithApollo = (ac) => {
 
                             // getDataFromTree does not call componentWillUnmount
                             // head side effect therefore need to be cleared manually
-                            Head.rewind();
+                            // deprecated. https://github.com/jaydenseric/next-graphql-react/issues/3#issuecomment-864830472
+                            // Head.rewind();
                         }
                     }
 
