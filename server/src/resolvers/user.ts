@@ -1,3 +1,4 @@
+import { StatusType } from "@kyle-chat/common";
 import argon2 from "argon2";
 import {
     Arg,
@@ -9,8 +10,9 @@ import {
     Resolver,
     Root,
 } from "type-graphql";
-import { getConnection } from "typeorm";
+import { getConnection, getRepository } from "typeorm";
 import { COOKIE_NAME } from "../constants";
+import { Group } from "../entities/Group";
 import { User } from "../entities/User";
 import { MyContext } from "../types";
 import { UsernamePasswordInput } from "./classes/UsernamePasswordInput";
@@ -103,6 +105,13 @@ export class UserResolver {
         //set a cookie on the user and keep them logged in
         req.session.userId = user.id;
 
+        // add them to the main chat
+        await getRepository(Group)
+            .createQueryBuilder()
+            .relation(Group, "users")
+            .of(1)
+            .add(user.id);
+
         return { user };
     }
 
@@ -168,5 +177,19 @@ export class UserResolver {
                 resolve(true);
             })
         );
+    }
+
+    @Mutation(() => Boolean)
+    static async setStatus(
+        @Arg("userId") userId: number,
+        @Arg("status") status: StatusType
+    ) {
+        //userId needs to be passed in as an argument and not in the context b/c this will be called directly in the socket connection
+        await getConnection()
+            .createQueryBuilder()
+            .update(User)
+            .set({ status })
+            .where("id = :id", { id: userId })
+            .execute();
     }
 }

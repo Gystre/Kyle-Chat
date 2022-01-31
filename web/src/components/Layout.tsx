@@ -88,7 +88,7 @@ export const Layout: React.FC<Props> = ({ children }) => {
                             </Box>
                         </Link>
                     </NextLink>
-                    <NextLink href="/friends">
+                    <NextLink href="/chat">
                         <Link cursor="pointer">
                             <Box
                                 p="3"

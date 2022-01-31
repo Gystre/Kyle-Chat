@@ -1,0 +1,14 @@
+fragment MessageFragment on Message {
+    id
+    text
+    author {
+        id
+        username
+        imageUrl
+    }
+    group {
+        id
+        name
+        type
+    }
+}

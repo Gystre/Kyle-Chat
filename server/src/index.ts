@@ -1,3 +1,8 @@
+import {
+    GroupType,
+    MAIN_CHAT_ID,
+    slateObjectCharacterLength,
+} from "@kyle-chat/common";
 import { ApolloServer } from "apollo-server-express";
 import connectRedis from "connect-redis";
 import cors from "cors";
@@ -9,7 +14,7 @@ import path from "path";
 import "reflect-metadata";
 import { Server, Socket } from "socket.io";
 import { buildSchema } from "type-graphql";
-import { createConnection } from "typeorm";
+import { createConnection, getConnection } from "typeorm";
 import { COOKIE_NAME, __prod__ } from "./constants";
 import { Friend } from "./entities/Friend";
 import { Group } from "./entities/Group";
@@ -135,6 +140,7 @@ const main = async () => {
 
     io.on("connection", async (socket: Socket) => {
         const sessionId = "sess:" + socket.request.sessionID;
+        console.log(sessionId);
 
         //check redis for the userId
         if (!(await redis.exists(sessionId))) {
@@ -148,14 +154,34 @@ const main = async () => {
 
         console.log("id:", userId, " connected");
 
-        socket.on("test", () => {
-            console.log("recieved the test!");
+        socket.on("sendMessage", (slateText: string) => {
+            if (slateObjectCharacterLength(JSON.parse(slateText)) <= 0) {
+                console.log("msg can't be empty");
+                return;
+            }
+            console.log("received", slateText);
         });
 
         socket.on("disconnect", () => {
             console.log("user disconnected");
         });
     });
+
+    // create the main chat room
+    const mainChat = await getConnection()
+        .getRepository("group")
+        .find({ where: { id: MAIN_CHAT_ID } });
+
+    if (mainChat.length == 0) {
+        await Group.create({
+            name: "main",
+            type: GroupType.ChatRoom,
+            creatorId: 1, //change this later
+            users: [],
+            imageUrl: "",
+        }).save();
+        console.log("Created main chat");
+    }
 
     console.log("Kyle Chat server!!!!!");
 };

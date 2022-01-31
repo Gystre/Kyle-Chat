@@ -1,3 +1,4 @@
+import { StatusType } from "@kyle-chat/common";
 import { Field, ObjectType } from "type-graphql";
 import {
     BaseEntity,
@@ -34,6 +35,11 @@ export class User extends BaseEntity {
     @Field()
     @Column()
     imageUrl!: string;
+
+    //they online or offline?
+    @Field()
+    @Column({ type: "int", default: StatusType.Offline })
+    status!: StatusType;
 
     //the groups that the user is apart of
     @ManyToMany(() => Group, (group) => group.users, { onDelete: "CASCADE" }) //delete the group entry if a group is deleted

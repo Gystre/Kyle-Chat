@@ -2,6 +2,11 @@ import jp from "jsonpath";
 import { Descendant } from "slate";
 
 /*
+Id of main chat
+*/
+export const MAIN_CHAT_ID = 1;
+
+/*
 All the possible states that a request can be in
 */
 export enum FriendRequestState {
@@ -18,6 +23,14 @@ export enum GroupType {
     DM = 0, //between two people
     GroupDM, //lots of people, must be friends of creator
     ChatRoom, //lots of people, don't need to be friends of creator
+}
+
+/*
+User: All possible states for a user's online status
+*/
+export enum StatusType {
+    Offline = 0, //websocket is currently disconnected
+    Online, //websocket is connected
 }
 
 //counts the amount of characters that are in a slate json-ified object

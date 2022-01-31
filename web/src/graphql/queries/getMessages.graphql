@@ -1,0 +1,8 @@
+query GetMessages($groupId: Int!, $limit: Int!, $cursor: String) {
+    getMessages(groupId: $groupId, cursor: $cursor, limit: $limit) {
+        hasMore
+        messages {
+            ...MessageFragment
+        }
+    }
+}
