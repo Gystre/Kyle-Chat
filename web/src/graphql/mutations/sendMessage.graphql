@@ -1,7 +1,0 @@
-mutation SendMessage($text: String!, $groupId: Int!, $userId: Int!) {
-    sendMessage(text: $text, groupId: $groupId, userId: $userId) {
-        message {
-            ...MessageFragment
-        }
-    }
-}

@@ -12,6 +12,7 @@ import session from "express-session";
 import Redis from "ioredis";
 import path from "path";
 import "reflect-metadata";
+import { Descendant } from "slate";
 import { Server, Socket } from "socket.io";
 import { buildSchema } from "type-graphql";
 import { createConnection, getConnection } from "typeorm";
@@ -140,7 +141,6 @@ const main = async () => {
 
     io.on("connection", async (socket: Socket) => {
         const sessionId = "sess:" + socket.request.sessionID;
-        console.log(sessionId);
 
         //check redis for the userId
         if (!(await redis.exists(sessionId))) {
@@ -152,15 +152,26 @@ const main = async () => {
             (await redis.get(sessionId)) as string
         ).userId;
 
-        console.log("id:", userId, " connected");
+        console.log("id:", userId, ", sess:", sessionId, "connected");
+        console.log("users connected", io.engine.clientsCount);
 
-        socket.on("sendMessage", (slateText: string) => {
-            if (slateObjectCharacterLength(JSON.parse(slateText)) <= 0) {
-                console.log("msg can't be empty");
-                return;
+        socket.on(
+            "sendMessage",
+            async (groupId: number, slateText: Descendant[]) => {
+                if (slateObjectCharacterLength(slateText) <= 0) {
+                    console.log("msg can't be empty");
+                    return;
+                }
+
+                var msg = await MessageResolver.sendMessage(
+                    slateText,
+                    groupId,
+                    userId
+                );
+
+                io.emit("newMessage", msg.message);
             }
-            console.log("received", slateText);
-        });
+        );
 
         socket.on("disconnect", () => {
             console.log("user disconnected");

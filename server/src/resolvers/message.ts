@@ -1,4 +1,5 @@
 import { slateObjectCharacterLength } from "@kyle-chat/common";
+import { Descendant } from "slate";
 import {
     Arg,
     Ctx,
@@ -71,7 +72,7 @@ export class MessageResolver {
 
         const replacements: any[] = [realLimitPlusOne];
 
-        //passed in a cursor? then take all posts after the timestamp
+        //passed in a cursor? then take all items after the timestamp
         if (cursor) {
             replacements.push(new Date(parseInt(cursor)));
         }
@@ -88,7 +89,7 @@ export class MessageResolver {
                     ? `where p."createdAt" < $2 and p."groupId" = $3`
                     : `where p."groupId" = $2`
             }
-            order by p."createdAt" DESC
+            order by "id" DESC
             limit $1
           `,
             [...replacements, groupId]
@@ -102,23 +103,23 @@ export class MessageResolver {
 
     @Mutation(() => MessageResponse)
     @UseMiddleware()
-    async sendMessage(
+    static async sendMessage(
         //string will be a json-ified form of a slate object NOT THE TEXT ITSELF
-        @Arg("text", () => String) text: string,
+        @Arg("text", () => Object) text: Descendant[],
 
         //the group that the user is sending the message to
         @Arg("groupId", () => Int) groupId: number,
 
         @Arg("userId", () => Int) userId: number
     ): Promise<MessageResponse> {
-        var characterCount = slateObjectCharacterLength(JSON.parse(text));
+        var characterCount = slateObjectCharacterLength(text);
 
-        if (characterCount == MIN_TEXT_LENGTH) {
+        if (characterCount < MIN_TEXT_LENGTH) {
             return {
                 errors: [
                     {
                         field: "text",
-                        message: `Your comment needs to be longer than ${MIN_TEXT_LENGTH} characters!`,
+                        message: `Your message needs to be longer than ${MIN_TEXT_LENGTH} characters!`,
                     },
                 ],
             };
@@ -129,7 +130,7 @@ export class MessageResolver {
                 errors: [
                     {
                         field: "text",
-                        message: `Your comment can't be longer than ${MAX_TEXT_LENGTH} characters!`,
+                        message: `Your message can't be longer than ${MAX_TEXT_LENGTH} characters!`,
                     },
                 ],
             };
@@ -159,7 +160,7 @@ export class MessageResolver {
                 groupId,
                 group,
 
-                text,
+                text: JSON.stringify(text),
             }).save(),
         };
     }

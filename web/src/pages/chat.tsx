@@ -1,4 +1,4 @@
-import { ChatModule } from "../components/ChatModule";
+import { ChatModule } from "../components/Message/ChatModule";
 import { Layout } from "../components/Layout";
 import { useIsAuth } from "../utils/useIsAuth";
 import { withApollo } from "../utils/withApollo";

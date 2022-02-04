@@ -44,3 +44,13 @@ export const slateObjectCharacterLength = (textBody: Descendant[]) => {
 
     return textCount;
 };
+
+// socket io types (figure out how to do this later)
+// https://socket.io/docs/v4/typescript/#types-for-the-server
+// interface ServerToClientEvents {
+//     newMessage: (slateText: string) => void;
+// }
+
+// interface ClientToServerEvents {
+//     sendMessage: (slateText: string) => void;
+// }

@@ -1,10 +1,9 @@
 fragment MessageFragment on Message {
     id
     text
+    createdAt
     author {
-        id
-        username
-        imageUrl
+        ...RegularUser
     }
     group {
         id

@@ -58,6 +58,18 @@ export type GroupResponse = {
   group?: Maybe<Group>;
 };
 
+export type Message = {
+  __typename?: 'Message';
+  id: Scalars['Float'];
+  groupId: Scalars['Float'];
+  authorId: Scalars['Float'];
+  text: Scalars['String'];
+  createdAt: Scalars['String'];
+  updatedAt: Scalars['String'];
+  author: User;
+  group: Group;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   sendFriendRequest: FriendResponse;
@@ -110,6 +122,12 @@ export type MutationLoginArgs = {
   usernameOrEmail: Scalars['String'];
 };
 
+export type PaginatedMessages = {
+  __typename?: 'PaginatedMessages';
+  messages: Array<Message>;
+  hasMore: Scalars['Boolean'];
+};
+
 export type Query = {
   __typename?: 'Query';
   getOutgoingFriendRequests: Array<Friend>;
@@ -118,6 +136,7 @@ export type Query = {
   getGroups: Array<Group>;
   getGroup: GroupResponse;
   hello: Scalars['String'];
+  getMessages: PaginatedMessages;
   me?: Maybe<User>;
   findById?: Maybe<User>;
 };
@@ -125,6 +144,13 @@ export type Query = {
 
 export type QueryGetGroupArgs = {
   groupId: Scalars['Int'];
+};
+
+
+export type QueryGetMessagesArgs = {
+  groupId: Scalars['Int'];
+  cursor?: Maybe<Scalars['String']>;
+  limit: Scalars['Int'];
 };
 
 
@@ -139,6 +165,7 @@ export type User = {
   email: Scalars['String'];
   password: Scalars['String'];
   imageUrl: Scalars['String'];
+  status: Scalars['Float'];
   createdAt: Scalars['String'];
   updatedAt: Scalars['String'];
 };
@@ -173,6 +200,18 @@ export type GroupFragmentFragment = (
   & { creator: (
     { __typename?: 'User' }
     & Pick<User, 'id' | 'username'>
+  ) }
+);
+
+export type MessageFragmentFragment = (
+  { __typename?: 'Message' }
+  & Pick<Message, 'id' | 'text' | 'createdAt'>
+  & { author: (
+    { __typename?: 'User' }
+    & RegularUserFragment
+  ), group: (
+    { __typename?: 'Group' }
+    & Pick<Group, 'id' | 'name' | 'type'>
   ) }
 );
 
@@ -361,6 +400,25 @@ export type GetIncomingFriendRequestsQuery = (
   )> }
 );
 
+export type GetMessagesQueryVariables = Exact<{
+  groupId: Scalars['Int'];
+  limit: Scalars['Int'];
+  cursor?: Maybe<Scalars['String']>;
+}>;
+
+
+export type GetMessagesQuery = (
+  { __typename?: 'Query' }
+  & { getMessages: (
+    { __typename?: 'PaginatedMessages' }
+    & Pick<PaginatedMessages, 'hasMore'>
+    & { messages: Array<(
+      { __typename?: 'Message' }
+      & MessageFragmentFragment
+    )> }
+  ) }
+);
+
 export type GetOutgoingFriendRequestsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -416,6 +474,21 @@ export const GroupFragmentFragmentDoc = gql`
   }
 }
     `;
+export const MessageFragmentFragmentDoc = gql`
+    fragment MessageFragment on Message {
+  id
+  text
+  createdAt
+  author {
+    ...RegularUser
+  }
+  group {
+    id
+    name
+    type
+  }
+}
+    ${RegularUserFragmentDoc}`;
 export const RegularErrorFragmentDoc = gql`
     fragment RegularError on FieldError {
   field
@@ -831,6 +904,46 @@ export function useGetIncomingFriendRequestsLazyQuery(baseOptions?: Apollo.LazyQ
 export type GetIncomingFriendRequestsQueryHookResult = ReturnType<typeof useGetIncomingFriendRequestsQuery>;
 export type GetIncomingFriendRequestsLazyQueryHookResult = ReturnType<typeof useGetIncomingFriendRequestsLazyQuery>;
 export type GetIncomingFriendRequestsQueryResult = Apollo.QueryResult<GetIncomingFriendRequestsQuery, GetIncomingFriendRequestsQueryVariables>;
+export const GetMessagesDocument = gql`
+    query GetMessages($groupId: Int!, $limit: Int!, $cursor: String) {
+  getMessages(groupId: $groupId, cursor: $cursor, limit: $limit) {
+    hasMore
+    messages {
+      ...MessageFragment
+    }
+  }
+}
+    ${MessageFragmentFragmentDoc}`;
+
+/**
+ * __useGetMessagesQuery__
+ *
+ * To run a query within a React component, call `useGetMessagesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetMessagesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetMessagesQuery({
+ *   variables: {
+ *      groupId: // value for 'groupId'
+ *      limit: // value for 'limit'
+ *      cursor: // value for 'cursor'
+ *   },
+ * });
+ */
+export function useGetMessagesQuery(baseOptions: Apollo.QueryHookOptions<GetMessagesQuery, GetMessagesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetMessagesQuery, GetMessagesQueryVariables>(GetMessagesDocument, options);
+      }
+export function useGetMessagesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetMessagesQuery, GetMessagesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetMessagesQuery, GetMessagesQueryVariables>(GetMessagesDocument, options);
+        }
+export type GetMessagesQueryHookResult = ReturnType<typeof useGetMessagesQuery>;
+export type GetMessagesLazyQueryHookResult = ReturnType<typeof useGetMessagesLazyQuery>;
+export type GetMessagesQueryResult = Apollo.QueryResult<GetMessagesQuery, GetMessagesQueryVariables>;
 export const GetOutgoingFriendRequestsDocument = gql`
     query GetOutgoingFriendRequests {
   getOutgoingFriendRequests {
